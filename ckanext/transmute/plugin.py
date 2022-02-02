@@ -2,6 +2,7 @@ import ckan.plugins as p
 import ckan.plugins.toolkit as tk
 
 from ckanext.transmute.logic.action import get_actions
+from ckanext.transmute.logic.auth import get_auth_functions
 from ckanext.transmute.cli import get_commands
 
 
@@ -9,6 +10,7 @@ class TransmutePlugin(p.SingletonPlugin):
     p.implements(p.IConfigurer)
     p.implements(p.IActions)
     p.implements(p.IClick)
+    p.implements(p.IAuthFunctions)
 
     # IConfigurer
     def update_config(self, config_):
@@ -28,3 +30,9 @@ class TransmutePlugin(p.SingletonPlugin):
         """Registers a list of extension specific CLI commands
         """
         return get_commands()
+
+    # IAuthFunctions
+    def get_auth_functions(self):
+        """Registers a list of extension specific auth function
+        """
+        return get_auth_functions()
