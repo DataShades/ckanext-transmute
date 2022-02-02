@@ -1,0 +1,14 @@
+# transmute-js:
+#   filter: rjsmin
+#   output: ckanext-transmute/%(version)s-transmute.js
+#   contents:
+#     - js/transmute.js
+#   extra:
+#     preload:
+#       - base/main
+
+# transmute-css:
+#   filter: cssrewrite
+#   output: ckanext-transmute/%(version)s-transmute.css
+#   contents:
+#     - css/transmute.css
