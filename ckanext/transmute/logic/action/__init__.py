@@ -1,2 +1,7 @@
+from . import get
+
+
 def get_actions():
-    return {}
+    return {
+        'tsm_transmute': get.transmute,
+    }

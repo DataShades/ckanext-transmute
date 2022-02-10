@@ -4,7 +4,7 @@ import ckan.plugins.toolkit as tk
 from ckanext.transmute.logic.action import get_actions
 from ckanext.transmute.logic.auth import get_auth_functions
 from ckanext.transmute.cli import get_commands
-from ckanext.transmute.validators import get_transmutators
+from ckanext.transmute.transmutators import get_transmutators
 
 
 class TransmutePlugin(p.SingletonPlugin):
