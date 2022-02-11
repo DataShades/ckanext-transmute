@@ -101,3 +101,10 @@ def isodate(field: Field) -> Field:
     field.value = name_validator(field.value, {})
 
     return field
+
+
+@transmutator
+def to_string(field: Field) -> Field:
+    field.value = str(field.value)
+
+    return field
