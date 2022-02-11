@@ -44,8 +44,7 @@ class TestTransmuteAction:
         )
 
     def test_transmute_default_with_origin_value(self):
-        """The default value mustn't replace the origin value
-        """
+        """The default value mustn't replace the origin value"""
         metadata_created: str = "2024-02-03"
         metadata_created_default: str = "2022-02-03"
 
@@ -76,8 +75,6 @@ class TestTransmuteAction:
         value is empty
         """
         data: dict[str, Any] = {
-            "title": "Test-dataset",
-            "email": "test@test.ua",
             "metadata_created": "",
             "metadata_modified": "",
         }
@@ -97,8 +94,6 @@ class TestTransmuteAction:
         """
         metadata_modified = "2021-02-03"
         data: dict[str, Any] = {
-            "title": "Test-dataset",
-            "email": "test@test.ua",
             "metadata_created": "",
             "metadata_modified": metadata_modified,
         }
@@ -114,11 +109,8 @@ class TestTransmuteAction:
         assert result["metadata_modified"] == h.date_str_to_datetime(metadata_modified)
 
     def test_transmute_default_from_with_empty_target(self):
-        """The target field value could be empty
-        """
+        """The target field value could be empty"""
         data: dict[str, Any] = {
-            "title": "Test-dataset",
-            "email": "test@test.ua",
             "metadata_created": "",
             "metadata_modified": "",
         }
@@ -173,13 +165,92 @@ class TestTransmuteAction:
             == f"Field: `replace_from` sibling field is not exists: {target_field}"
         )
 
-    def test_transmute_replace_from(self, tsm_schema):
-        pass
+    def test_transmute_replace_from(self):
+        """The `replace_from` must copy value from target field and replace
+        the origin value whether it is empty or not
+        """
+        metadata_created: str = "2024-02-03"
+        metadata_modified: str = "2022-02-03"
+        data: dict[str, Any] = {
+            "metadata_created": metadata_created,
+            "metadata_modified": metadata_modified,
+        }
+
+        tsm_schema = build_schema(
+            {
+                "metadata_created": {"validators": ["tsm_isodate"]},
+                "metadata_modified": {
+                    "validators": ["tsm_isodate"],
+                    "replace_from": "metadata_created",
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["metadata_modified"] == result["metadata_created"]
+
+    def test_transmute_remove_field(self):
+        """Field with `remove` must be excluded from the result"""
+        data: dict[str, Any] = {
+            "metadata_created": "2024-02-03",
+            "metadata_modified": "2022-02-03",
+        }
+
+        tsm_schema = build_schema(
+            {
+                "metadata_created": {"validators": ["tsm_isodate"]},
+                "metadata_modified": {
+                    "remove": 1,
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert "metadata_modified" not in result
+
+    def test_transmute_replace_with(self):
+        """The`replace_with` must replace the origin value, whenever
+        it's empty or not"""
+        data: dict[str, Any] = {
+            "field1": "",
+            "field2": "hello-world",
+        }
+
+        tsm_schema = build_schema(
+            {
+                "field1": {"replace_with": 101},
+                "field2": {"replace_with": 101},
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field1"] == result["field2"] == 101
 
     def test_transmute_deep_nested(self, tsm_schema):
         data: dict[str, Any] = {
             "title": "Test-dataset",
             "email": "test@test.ua",
+            "metadata_created": "",
+            "metadata_modified": "",
+            "metadata_reviewed": "",
             "resources": [
                 {
                     "title": "test-res",
@@ -207,10 +278,14 @@ class TestTransmuteAction:
             schema=tsm_schema,
             root="Dataset",
         )
-
+        
+        metadata_created = h.date_str_to_datetime("2022-02-03T15:54:26.359453")
         assert data == {
             "name": "test-dataset",
             "email": "test@test.ua",
+            "metadata_created": metadata_created,
+            "metadata_modified": metadata_created,
+            "metadata_reviewed": metadata_created,
             "attachments": [
                 {
                     "name": "test-res",
