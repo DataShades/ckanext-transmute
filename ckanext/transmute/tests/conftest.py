@@ -26,13 +26,16 @@ def tsm_schema():
                     },
                     "metadata_created": {
                         "validators": ["tsm_isodate"],
-                        "default": "2022-02-03T15:54:26.359453"
+                        "default": "2022-02-03T15:54:26.359453",
                     },
                     "metadata_modified": {
                         "validators": ["tsm_isodate"],
-                        "default_from": "2022-02-03T15:54:26.359453",
-                        "replace_from": "2022-02-03T15:54:26.359453",
-                    }
+                        "default_from": "metadata_created",
+                    },
+                    "metadata_reviewed": {
+                        "validators": ["tsm_isodate"],
+                        "replace_from": "metadata_modified",
+                    },
                 }
             },
             "Resource": {
@@ -67,8 +70,8 @@ def tsm_schema():
                     },
                     "extra": {
                         "remove": True,
-                    }
+                    },
                 }
-            }
-        }
+            },
+        },
     }
