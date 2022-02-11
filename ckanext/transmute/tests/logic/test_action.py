@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from ckanext.transmute.exception import SchemaParsingError
+from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
 
 import pytest
 
@@ -9,15 +9,28 @@ import ckan.lib.helpers as h
 import ckan.logic as logic
 from ckan.tests.helpers import call_action
 
+from ckanext.transmute.tests.helpers import build_schema
+
 
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
 class TestTransmuteAction:
-    def test_transmute_default(self, tsm_schema):
+    def test_transmute_default(self):
+        """If the origin evaluates to False it must be replaced
+        with the default value
+        """
         data: dict[str, Any] = {
-            "title": "Test-dataset",
-            "email": "test@test.ua",
             "metadata_created": "",
         }
+
+        metadata_created_default: str = "2022-02-03"
+        tsm_schema = build_schema(
+            {
+                "metadata_created": {
+                    "validators": ["tsm_isodate"],
+                    "default": metadata_created_default,
+                },
+            }
+        )
 
         result = call_action(
             "tsm_transmute",
@@ -27,8 +40,141 @@ class TestTransmuteAction:
         )
 
         assert result["metadata_created"] == h.date_str_to_datetime(
-            "2022-02-03T15:54:26.359453"
+            metadata_created_default
         )
+
+    def test_transmute_default_with_origin_value(self):
+        """The default value mustn't replace the origin value
+        """
+        metadata_created: str = "2024-02-03"
+        metadata_created_default: str = "2022-02-03"
+
+        data: dict[str, Any] = {
+            "metadata_created": metadata_created,
+        }
+
+        tsm_schema = build_schema(
+            {
+                "metadata_created": {
+                    "validators": ["tsm_isodate"],
+                    "default": metadata_created_default,
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        result["metadata_created"] == h.date_str_to_datetime("2022-02-03")
+
+    def test_transmute_default_from_without_origin_value(self, tsm_schema):
+        """The `default_from` must copy value from target field if the origin
+        value is empty
+        """
+        data: dict[str, Any] = {
+            "title": "Test-dataset",
+            "email": "test@test.ua",
+            "metadata_created": "",
+            "metadata_modified": "",
+        }
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["metadata_created"] == result["metadata_modified"]
+
+    def test_transmute_default_from_with_origin_value(self, tsm_schema):
+        """The field value shoudn't be replaced because of `default_from`
+        if the value is already exists.
+        """
+        metadata_modified = "2021-02-03"
+        data: dict[str, Any] = {
+            "title": "Test-dataset",
+            "email": "test@test.ua",
+            "metadata_created": "",
+            "metadata_modified": metadata_modified,
+        }
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["metadata_created"] != result["metadata_modified"]
+        assert result["metadata_modified"] == h.date_str_to_datetime(metadata_modified)
+
+    def test_transmute_default_from_with_empty_target(self):
+        """The target field value could be empty
+        """
+        data: dict[str, Any] = {
+            "title": "Test-dataset",
+            "email": "test@test.ua",
+            "metadata_created": "",
+            "metadata_modified": "",
+        }
+
+        tsm_schema = build_schema(
+            {
+                "metadata_created": {},
+                "metadata_modified": {
+                    "default_from": "metadata_created",
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["metadata_created"] == result["metadata_modified"]
+
+    def test_transmute_default_from_without_defining_target_field(self):
+        """The field in default_from must be defiend in schema
+        Otherwise the SchemaFieldError must be raised
+        """
+        data: dict[str, Any] = {
+            "metadata_created": "",
+            "metadata_modified": "",
+        }
+
+        target_field: str = "metadata_created"
+
+        tsm_schema = build_schema(
+            {
+                "metadata_modified": {
+                    "default_from": target_field,
+                },
+            }
+        )
+
+        with pytest.raises(SchemaFieldError) as e:
+            result = call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert (
+            e.value.error
+            == f"Field: `replace_from` sibling field is not exists: {target_field}"
+        )
+
+    def test_transmute_replace_from(self, tsm_schema):
+        pass
 
     def test_transmute_deep_nested(self, tsm_schema):
         data: dict[str, Any] = {
