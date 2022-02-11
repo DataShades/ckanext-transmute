@@ -60,20 +60,23 @@ def _mutate_data(data, definition, root):
             continue
 
         if schema_field.default and not value:
-            data[field] = schema_field.default
+            data[field] = value = schema_field.default
 
         if schema_field.default_from and not value:
-            data[field] = data[schema_field.get_default_from()]
+            data[field] = value = data[schema_field.get_default_from()]
 
         if schema_field.replace_from:
-            data[field] = data[schema_field.get_replace_from()]
+            data[field] = value = data[schema_field.get_replace_from()]
+
+        if schema_field.replace_with:
+            data[field] = value = schema_field.replace_with
 
         if schema_field.is_multiple():
             for nested_field in value:
                 _mutate_data(nested_field, definition, schema_field.type)
         else:
             data[field] = _apply_validators(
-                Field(field, value or data[field], root), schema_field.validators
+                Field(field, value, root), schema_field.validators
             )
 
         if schema_field.map_to:
