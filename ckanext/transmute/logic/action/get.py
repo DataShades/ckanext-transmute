@@ -63,10 +63,10 @@ def _mutate_data(data, definition, root):
             data[field] = schema_field.default
 
         if schema_field.default_from and not value:
-            data[field] = schema_field.get_default_from()
+            data[field] = data[schema_field.get_default_from()]
 
         if schema_field.replace_from:
-            data[field] = schema_field.get_replace_from()
+            data[field] = data[schema_field.get_replace_from()]
 
         if schema_field.is_multiple():
             for nested_field in value:

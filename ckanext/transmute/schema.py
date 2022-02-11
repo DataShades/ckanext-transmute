@@ -42,16 +42,21 @@ class SchemaField:
     
     def get_default_from(self) -> Optional[Any]:
         if not self.default_from:
-            raise SchemaFieldError("Field: `default_from` field is not defined")
-        return self._get_sibling_field_value(self.default_from)
+            raise SchemaFieldError("Field: `default_from` field name is not defined")
+        return self._get_sibling_field_name(self.default_from)
     
     def get_replace_from(self) -> Optional[Any]:
         if not self.replace_from:
-            raise SchemaFieldError("Field: `replace_from` field is not defined")
-        return self._get_sibling_field_value(self.replace_from)
+            raise SchemaFieldError("Field: `replace_from` field name is not defined")
+        return self._get_sibling_field_name(self.replace_from)
 
-    def _get_sibling_field_value(self, field_name: str) -> Optional[Any]:
-        return self.definition["field"].get(field_name)
+    def _get_sibling_field_name(self, field_name: str) -> Optional[Any]:
+        field = self.definition["fields"].get(field_name)
+
+        if not field:
+            raise SchemaFieldError(f"Field: `replace_from` sibling field is not exists: {field_name}")
+
+        return field_name
 
 class SchemaParser:
     def __init__(self, schema):
