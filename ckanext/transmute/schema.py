@@ -8,17 +8,19 @@ from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
 class SchemaField:
     def __init__(
         self,
-        name: str,
-        type_: str,
-        definition: dict,
-        map_to: Optional[str],
-        validators: Optional[list],
-        multiple: bool,
-        remove: bool,
-        default: Optional[Any],
-        default_from: Optional[str],
-        replace_from: Optional[str],
-        replace_with: Optional[Any]
+        *,
+        name: str = None,
+        type_: str = None,
+        definition: dict = None,
+        map_to: Optional[str] = None,
+        validators: Optional[list] = None,
+        multiple: bool = None,
+        remove: bool = None,
+        default: Optional[Any]= None,
+        default_from: Optional[str]= None,
+        replace_with: Optional[Any]= None,
+        replace_from: Optional[str]= None,
+
     ):
         self.name = name
         self.type = type_
@@ -105,17 +107,17 @@ class SchemaParser:
         """
 
         return SchemaField(
-            field_name,
-            field_meta.get("type", _type),
-            self.types[_type],
-            field_meta.get("map", None),
-            field_meta.get("validators"),
-            field_meta.get("multiple", False),
-            field_meta.get("remove", False),
-            field_meta.get("default", None),
-            field_meta.get("default_from", None),
-            field_meta.get("replace_with", None),
-            field_meta.get("replace_from", None)
+            name=field_name,
+            type_=field_meta.get("type", _type),
+            definition=self.types[_type],
+            map_to=field_meta.get("map", None),
+            validators=field_meta.get("validators"),
+            multiple=field_meta.get("multiple", False),
+            remove=field_meta.get("remove", False),
+            default=field_meta.get("default", None),
+            default_from=field_meta.get("default_from", None),
+            replace_with=field_meta.get("replace_with", None),
+            replace_from=field_meta.get("replace_from", None)
         )
 
 
