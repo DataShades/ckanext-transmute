@@ -1,5 +1,7 @@
 from typing import Any, Optional
 
+import copy
+
 from ckan.logic.schema import validator_args
 
 from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
@@ -61,7 +63,7 @@ class SchemaField:
 
 class SchemaParser:
     def __init__(self, schema):
-        self.schema = schema
+        self.schema = copy.deepcopy(schema)
         self.root_type = self.get_root_type()
         self.types = self.parse_types()
         self.parse_fields()
