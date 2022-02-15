@@ -26,7 +26,7 @@ def transmute(ctx: dict[str, Any], data_dict: TransmuteData) -> dict[str, Any]:
     Returns:
         Transmuted data dict
     """
-    tk.check_access("tsm_get_schemas", ctx, data_dict)
+    tk.check_access("tsm_transmute", ctx, data_dict)
 
     data = data_dict["data"]
     schema = SchemaParser(data_dict["schema"])
@@ -158,7 +158,15 @@ def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
     """
     try:
         for validator in validators:
-            field = tk.get_validator(validator)(field)
+            if isinstance(validator, list):
+
+                # TODO show some error if there are less then 1 arg
+                if len(validator) <= 1:
+                    pass
+                
+                tk.get_validator(validator[0])(field, *validator[1:])
+            else:
+                field = tk.get_validator(validator)(field)
     except df.Invalid as e:
         raise ValidationError({f"{field.type}:{field.field_name}": [e.error]})
 
