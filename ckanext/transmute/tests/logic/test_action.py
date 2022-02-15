@@ -195,6 +195,47 @@ class TestTransmuteAction:
 
         assert result["metadata_modified"] == result["metadata_created"]
 
+    def test_transmute_replace_from_nested(self):
+        data = {
+            "title_translated": [
+                {
+                    "nested_field": {
+                        "en": "en title",
+                        "ar": "العنوان ar"
+                    }
+                },
+            ]
+        }
+        
+        tsm_schema = build_schema(
+            {
+                "title_translated": {},
+                "title": {
+                    "replace_from": "title_translated",
+                    "validators": [
+                        ["tsm_get_nested", 0, "nested_field", "en"],
+                        "tsm_to_uppercase"
+                    ],
+                },
+                "title_ar": {
+                    "replace_from": "title_translated",
+                    "validators": [
+                        ["tsm_get_nested", 0, "nested_field", "ar"]
+                    ],
+                },
+            }
+        )
+        
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+        
+        result["title"] == data["title_translated"][0]["nested_field"]["en"].upper()
+        result["title_ar"] == data["title_translated"][0]["nested_field"]["ar"]
+                
     def test_transmute_remove_field(self):
         """Field with `remove` must be excluded from the result"""
         data: dict[str, Any] = {
@@ -391,3 +432,4 @@ class TestTransmuteAction:
         
         assert "field1" in result
         assert result["field1"] == 101
+    
