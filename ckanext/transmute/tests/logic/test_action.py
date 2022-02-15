@@ -220,8 +220,8 @@ class TestTransmuteAction:
 
         assert "metadata_modified" not in result
 
-    def test_transmute_replace_with(self):
-        """The`replace_with` must replace the origin value, whenever
+    def test_transmute_value(self):
+        """The`value` must replace the origin value, whenever
         it's empty or not"""
         data: dict[str, Any] = {
             "field1": "",
@@ -230,8 +230,8 @@ class TestTransmuteAction:
 
         tsm_schema = build_schema(
             {
-                "field1": {"replace_with": 101},
-                "field2": {"replace_with": 101},
+                "field1": {"value": 101},
+                "field2": {"value": 101},
             }
         )
 
@@ -340,3 +340,54 @@ class TestTransmuteAction:
             call_action("tsm_transmute", data={"title": "test"}, schema={})
 
         assert e.value.error == "Schema: root type is missing"
+
+    def test_transmute_new_field_inherit(self):
+        """We can define a new field in schema and it will be
+        added to the result data
+        """
+        data: dict[str, Any] = {
+            "metadata_created": "",
+        }
+
+        tsm_schema = build_schema(
+            {
+                "metadata_created": {},
+                "metadata_modified": {
+                    "default_from": "metadata_created",
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+        
+        assert "metadata_modified" in result
+        assert result["metadata_modified"] == result["metadata_created"]
+
+    def test_transmute_new_field_from_value(self):
+        """We can define a new field in schema and it will be
+        added to the result data
+        """
+        data: dict[str, Any] = {}
+
+        tsm_schema = build_schema(
+            {
+                "field1": {
+                    "value": 101
+                }
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+        
+        assert "field1" in result
+        assert result["field1"] == 101
