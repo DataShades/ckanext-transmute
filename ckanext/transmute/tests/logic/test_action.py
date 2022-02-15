@@ -433,3 +433,25 @@ class TestTransmuteAction:
         assert "field1" in result
         assert result["field1"] == 101
     
+    def test_transmute_run_multiple_times(self):
+        data: dict[str, Any] = {}
+
+        tsm_schema = build_schema(
+            {
+                "field1": {
+                    "value": 101
+                }
+            }
+        )
+
+
+        for i in range(10):
+            result = call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+        
+        assert "field1" in result
+        assert result["field1"] == 101
