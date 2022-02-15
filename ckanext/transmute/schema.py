@@ -9,18 +9,17 @@ class SchemaField:
     def __init__(
         self,
         *,
-        name: str = None,
-        type_: str = None,
-        definition: dict = None,
+        name: str,
+        type_: str,
+        definition: dict,
         map_to: Optional[str] = None,
         validators: Optional[list] = None,
         multiple: bool = None,
         remove: bool = None,
-        default: Optional[Any]= None,
-        default_from: Optional[str]= None,
-        replace_with: Optional[Any]= None,
-        replace_from: Optional[str]= None,
-
+        default: Optional[Any] = None,
+        default_from: Optional[str] = None,
+        value: Optional[Any] = None,
+        replace_from: Optional[str] = None,
     ):
         self.name = name
         self.type = type_
@@ -32,7 +31,7 @@ class SchemaField:
         self.default = default
         self.default_from = default_from
         self.replace_from = replace_from
-        self.replace_with = replace_with
+        self.value = value
 
     def __repr__(self):
         return (f"<Field name={self.name} map_to={self.map_to}"
@@ -40,7 +39,7 @@ class SchemaField:
                 f" validators={self.validators}>")
 
     def is_multiple(self) -> bool:
-        return self.multiple
+        return bool(self.multiple)
     
     def get_default_from(self) -> Optional[Any]:
         if not self.default_from:
@@ -116,8 +115,8 @@ class SchemaParser:
             remove=field_meta.get("remove", False),
             default=field_meta.get("default", None),
             default_from=field_meta.get("default_from", None),
-            replace_with=field_meta.get("replace_with", None),
-            replace_from=field_meta.get("replace_from", None)
+            value=field_meta.get("value", None),
+            replace_from=field_meta.get("replace_from", None),
         )
 
 
