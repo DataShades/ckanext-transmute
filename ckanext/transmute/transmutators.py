@@ -108,3 +108,13 @@ def to_string(field: Field) -> Field:
     field.value = str(field.value)
 
     return field
+
+@transmutator
+def get_nested(field: Field, *path) -> Field:
+    for key in path:
+        try:
+            field.value = field.value[key]
+        except TypeError:
+            raise df.Invalid(tk._("Error parsing path"))
+    
+    return field
