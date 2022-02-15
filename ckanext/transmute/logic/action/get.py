@@ -30,57 +30,114 @@ def transmute(ctx: dict[str, Any], data_dict: TransmuteData) -> dict[str, Any]:
 
     data = data_dict["data"]
     schema = SchemaParser(data_dict["schema"])
-    _mutate_data(data, schema, "Dataset")
+    _transmute_data(data, schema)
 
     return data
 
 
-def _mutate_data(data, definition, root):
+def _transmute_data(data, definition, root="Dataset"):
     """Mutates an actual data in `data` dict
 
     Args:
         data (dict: [str, Any]): a data to mutate
         definition (SchemaParser): SchemaParser object
         root (str): a root schema type
+                    the default root is Dataset
     """
 
     schema = definition.types[root]
 
     if not schema:
         return
+    
+    mutate_old_fields(data, definition, root)
+    create_new_fields(data, definition, root)
 
-    for field, value in data.copy().items():
-        schema_field: SchemaField = schema["fields"].get(field)
 
-        if not schema_field:
+def mutate_old_fields(data, definition, root):
+    """Checks all of the data fields and mutate them
+    according to the provided schema
+    
+    New fields won't be created here, because we are
+    only traversing the data dictionary
+    
+    We can't traverse only Data or only Schema, because
+    otherwise, the user will have to define all of the fields
+    that could exist in data 
+
+    Args:
+        data (dict: [str, Any]): a data to mutate
+        definition (SchemaParser): SchemaParser object
+        root (str): a root schema type
+    """
+    schema = definition.types[root]
+    
+    for field_name, value in data.copy().items():
+        field: SchemaField = schema["fields"].get(field_name)
+
+        if not field:
             continue
 
-        if schema_field.remove:
-            data.pop(field)
+        if field.remove:
+            data.pop(field_name)
             continue
 
-        if schema_field.default and not value:
-            data[field] = value = schema_field.default
+        if field.default and not value:
+            data[field_name] = value = field.default
 
-        if schema_field.default_from and not value:
-            data[field] = value = data[schema_field.get_default_from()]
+        if field.default_from and not value:
+            data[field_name] = value = data[field.get_default_from()]
 
-        if schema_field.replace_from:
-            data[field] = value = data[schema_field.get_replace_from()]
+        if field.replace_from:
+            data[field_name] = value = data[field.get_replace_from()]
 
-        if schema_field.replace_with:
-            data[field] = value = schema_field.replace_with
+        if field.value:
+            data[field_name] = value = field.value
 
-        if schema_field.is_multiple():
+        if field.is_multiple():
             for nested_field in value:
-                _mutate_data(nested_field, definition, schema_field.type)
+                _transmute_data(nested_field, definition, field.type)
         else:
-            data[field] = _apply_validators(
-                Field(field, value, root), schema_field.validators
+            data[field_name] = _apply_validators(
+                Field(field_name, value, root), field.validators
             )
 
-        if schema_field.map_to:
-            data[schema_field.map_to] = data.pop(field)
+        if field.map_to:
+            data[field.map_to] = data.pop(field_name)
+
+
+def create_new_fields(data, definition, root):
+    """New fields are going to be created according
+    to the provided schema
+    
+    If the defined field is not exist in the data dict
+    we are going to create it
+    
+    The newly created field's value could be inherited from
+    an existing field. This field must be defined in the
+    schema.
+    """
+    schema = definition.types[root]
+    
+    for field_name, field in schema["fields"].items():
+        if field_name in data:
+            continue
+        
+        if field.default_from:
+            data[field_name] = data[field.get_default_from()]
+            
+        if field.replace_from:
+            data[field_name] = data[field.get_replace_from()]
+
+        if field.value:
+            data[field_name] = field.value
+        
+        if field_name not in data:
+            continue
+
+        data[field_name] = _apply_validators(
+            Field(field_name, data[field_name], root), field.validators
+        )
 
 
 def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
