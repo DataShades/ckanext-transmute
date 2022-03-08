@@ -124,8 +124,13 @@ class SchemaParser:
 
 @validator_args
 def transmute_schema(not_missing):
-
     return {
         "data": [not_missing],
         "schema": [not_missing],
+    }
+
+@validator_args
+def validate_schema(not_missing):
+    return {
+        "data": [not_missing],
     }

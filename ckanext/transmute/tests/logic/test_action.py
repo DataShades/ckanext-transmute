@@ -7,6 +7,7 @@ import pytest
 
 import ckan.lib.helpers as h
 import ckan.logic as logic
+import ckan.tests.factories as factories
 from ckan.tests.helpers import call_action
 
 from ckanext.transmute.tests.helpers import build_schema
@@ -198,15 +199,10 @@ class TestTransmuteAction:
     def test_transmute_replace_from_nested(self):
         data = {
             "title_translated": [
-                {
-                    "nested_field": {
-                        "en": "en title",
-                        "ar": "العنوان ar"
-                    }
-                },
+                {"nested_field": {"en": "en title", "ar": "العنوان ar"}},
             ]
         }
-        
+
         tsm_schema = build_schema(
             {
                 "title_translated": {},
@@ -214,28 +210,26 @@ class TestTransmuteAction:
                     "replace_from": "title_translated",
                     "validators": [
                         ["tsm_get_nested", 0, "nested_field", "en"],
-                        "tsm_to_uppercase"
+                        "tsm_to_uppercase",
                     ],
                 },
                 "title_ar": {
                     "replace_from": "title_translated",
-                    "validators": [
-                        ["tsm_get_nested", 0, "nested_field", "ar"]
-                    ],
+                    "validators": [["tsm_get_nested", 0, "nested_field", "ar"]],
                 },
             }
         )
-        
+
         result = call_action(
             "tsm_transmute",
             data=data,
             schema=tsm_schema,
             root="Dataset",
         )
-        
+
         result["title"] == data["title_translated"][0]["nested_field"]["en"].upper()
         result["title_ar"] == data["title_translated"][0]["nested_field"]["ar"]
-                
+
     def test_transmute_remove_field(self):
         """Field with `remove` must be excluded from the result"""
         data: dict[str, Any] = {
@@ -319,7 +313,7 @@ class TestTransmuteAction:
             schema=tsm_schema,
             root="Dataset",
         )
-        
+
         metadata_created = h.date_str_to_datetime("2022-02-03T15:54:26.359453")
         assert data == {
             "name": "test-dataset",
@@ -405,7 +399,7 @@ class TestTransmuteAction:
             schema=tsm_schema,
             root="Dataset",
         )
-        
+
         assert "metadata_modified" in result
         assert result["metadata_modified"] == result["metadata_created"]
 
@@ -415,13 +409,7 @@ class TestTransmuteAction:
         """
         data: dict[str, Any] = {}
 
-        tsm_schema = build_schema(
-            {
-                "field1": {
-                    "value": 101
-                }
-            }
-        )
+        tsm_schema = build_schema({"field1": {"value": 101}})
 
         result = call_action(
             "tsm_transmute",
@@ -429,21 +417,14 @@ class TestTransmuteAction:
             schema=tsm_schema,
             root="Dataset",
         )
-        
+
         assert "field1" in result
         assert result["field1"] == 101
-    
+
     def test_transmute_run_multiple_times(self):
         data: dict[str, Any] = {}
 
-        tsm_schema = build_schema(
-            {
-                "field1": {
-                    "value": 101
-                }
-            }
-        )
-
+        tsm_schema = build_schema({"field1": {"value": 101}})
 
         for i in range(10):
             result = call_action(
@@ -452,6 +433,27 @@ class TestTransmuteAction:
                 schema=tsm_schema,
                 root="Dataset",
             )
-        
+
         assert "field1" in result
         assert result["field1"] == 101
+
+
+@pytest.mark.usefixtures("clean_db")
+@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+class TestValidateAction:
+    def test_validate(self):
+        dataset = factories.Dataset()
+
+        data_dict = {
+            "id": dataset["id"],
+            "name": "Test name",
+            "private": "1",
+            "author_email": "not an email"
+        }
+
+        data, errors = call_action(
+            "tsm_validate",
+            data=data_dict,
+        )
+
+        assert len(errors) == 4

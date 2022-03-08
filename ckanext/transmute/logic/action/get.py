@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, Optional
 
 import ckan.plugins.toolkit as tk
+import ckan.lib.plugins as lib_plugins
 import ckan.lib.navl.dictization_functions as df
 from ckan.logic import validate
 
 from ckanext.transmute.types import TransmuteData, Field
-from ckanext.transmute.schema import SchemaParser, transmute_schema, SchemaField
+from ckanext.transmute.schema import SchemaParser, SchemaField
+from ckanext.transmute.schema import transmute_schema, validate_schema
 from ckanext.transmute.exception import ValidationError
+
+
+log = logging.getLogger(__name__)
 
 
 @tk.side_effect_free
@@ -174,5 +180,50 @@ def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
 
 
 @tk.side_effect_free
-def validate(ctx, data_dict) -> Optional[dict[str, str]]:
-    pass
+@validate(validate_schema)
+def validate(ctx, data_dict: dict[str, Any]) -> Optional[dict[str, str]]:
+    tk.check_access("tsm_transmute", ctx, data_dict)
+
+    data = data_dict["data"]
+
+    _set_package_type(data)
+    schema = _get_package_schema(ctx)
+    package_plugin = lib_plugins.lookup_package_plugin(data["type"])
+
+    data, errors = lib_plugins.plugin_validate(
+        package_plugin, ctx, data, schema, 'package_create')
+    import ipdb; ipdb.set_trace()
+    log.debug('package_create validate_errs=%r user=%s package=%s data=%r',
+              errors, ctx.get('user'),
+              data.get('name'), data)
+
+def _set_package_type(data_dict: dict[str, Any]) -> str:
+    """Set a package type
+
+    Args:
+        data_dict (dict): package metadata
+
+    Returns:
+        str: package type
+    """
+    if 'type' in data_dict and data_dict['type']:
+        return
+
+    package_plugin = lib_plugins.lookup_package_plugin()
+
+    try:
+        package_type = package_plugin.package_types()[0]
+    except (AttributeError, IndexError):
+        package_type = 'dataset'
+    
+    data_dict["type"] = package_type
+
+def _get_package_schema(ctx):
+    package_plugin = lib_plugins.lookup_package_plugin()
+
+    if 'schema' in ctx:
+        schema = ctx['schema']
+    else:
+        schema = package_plugin.create_package_schema()
+
+    return schema
