@@ -118,3 +118,13 @@ def get_nested(field: Field, *path) -> Field:
             raise df.Invalid(tk._("Error parsing path"))
     
     return field
+
+@transmutator
+def allow_res_formats(field: Field, validate_by: str, fmts: list[str]) -> Field:
+    resources = []
+
+    for res in field.value:
+        if res[validate_by] in fmts:
+            resources.append(res)
+
+    field.value = resources
