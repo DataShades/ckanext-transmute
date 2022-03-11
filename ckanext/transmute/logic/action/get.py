@@ -192,10 +192,9 @@ def validate(ctx, data_dict: dict[str, Any]) -> Optional[dict[str, str]]:
 
     data, errors = lib_plugins.plugin_validate(
         package_plugin, ctx, data, schema, 'package_create')
-    import ipdb; ipdb.set_trace()
-    log.debug('package_create validate_errs=%r user=%s package=%s data=%r',
-              errors, ctx.get('user'),
-              data.get('name'), data)
+
+    return data, errors
+
 
 def _set_package_type(data_dict: dict[str, Any]) -> str:
     """Set a package type
