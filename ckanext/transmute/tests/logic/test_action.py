@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
+from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError, ValidationError
 
 import pytest
 
@@ -436,6 +436,115 @@ class TestTransmuteAction:
 
         assert "field1" in result
         assert result["field1"] == 101
+    
+    def test_transmute_replacing_without_updating(self):
+        data: dict[str, Any] = {
+            "extras": [
+                {"key": "test", "value": 0}
+            ]
+        }
+
+        extras = [
+            {"key": "theme", "value": "nature"},
+            {"key": "name", "value": "nature-research"},
+        ]
+        tsm_schema = build_schema(
+            {
+                "extras": {
+                    "value": extras
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["extras"] == extras
+    
+    def test_transmute_update_value_list(self):
+        data: dict[str, Any] = {
+            "extras": [
+                {"key": "test", "value": 0}
+            ]
+        }
+
+        extras = [
+            {"key": "theme", "value": "nature"},
+            {"key": "name", "value": "nature-research"},
+        ]
+
+        tsm_schema = build_schema(
+            {
+                "extras": {
+                    "value": extras,
+                    "update": True
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["extras"] != extras
+        assert len(result["extras"]) == 3
+
+    def test_transmute_update_value_dict(self):
+        data: dict[str, Any] = {
+            "extras": {"test1": 1}
+        }
+
+        tsm_schema = build_schema(
+            {
+                "extras": {
+                    "value": {"test2": 2, "test3": 3},
+                    "update": True
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert len(result["extras"]) == 3
+        assert 'test1' in result["extras"]
+        assert 'test2' in result["extras"]
+        assert 'test3' in result["extras"]
+
+    def test_transmute_update_value_immutable(self):
+        data: dict[str, Any] = {
+            "resource_number": 101
+        }
+
+        tsm_schema = build_schema(
+            {
+                "resource_number": {
+                    "value": 111,
+                    "update": True
+                },
+            }
+        )
+
+        with pytest.raises(ValidationError) as e:
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert "resource_number: the field value is immutable" in e.value.error_dict["message"]
 
 
 @pytest.mark.usefixtures("clean_db")

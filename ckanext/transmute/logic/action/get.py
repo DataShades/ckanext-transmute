@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from re import I
 from typing import Any, Callable, Optional
 
 import ckan.plugins.toolkit as tk
@@ -12,7 +13,6 @@ from ckanext.transmute.types import TransmuteData, Field
 from ckanext.transmute.schema import SchemaParser, SchemaField
 from ckanext.transmute.schema import transmute_schema, validate_schema
 from ckanext.transmute.exception import ValidationError
-
 
 log = logging.getLogger(__name__)
 
@@ -98,7 +98,15 @@ def mutate_old_fields(data, definition, root):
             data[field_name] = value = data[field.get_replace_from()]
 
         if field.value:
-            data[field_name] = value = field.value
+            if field.update:
+                if isinstance(data[field_name], dict):
+                    data[field_name].update(field.value)
+                elif isinstance(data[field_name], list):
+                    data[field_name].extend(field.value)
+                else:
+                    raise ValidationError({f"{field_name}: the field value is immutable"})
+            else:
+                data[field_name] = value = field.value
 
         if field.is_multiple():
             for nested_field in value:

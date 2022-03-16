@@ -22,6 +22,7 @@ class SchemaField:
         default_from: Optional[str] = None,
         value: Optional[Any] = None,
         replace_from: Optional[str] = None,
+        update: bool = None,
     ):
         self.name = name
         self.type = type_
@@ -34,6 +35,7 @@ class SchemaField:
         self.default_from = default_from
         self.replace_from = replace_from
         self.value = value
+        self.update = update
 
     def __repr__(self):
         return (f"<Field name={self.name} map_to={self.map_to}"
@@ -119,6 +121,7 @@ class SchemaParser:
             default_from=field_meta.get("default_from", None),
             value=field_meta.get("value", None),
             replace_from=field_meta.get("replace_from", None),
+            update=field_meta.get("update", False)
         )
 
 
