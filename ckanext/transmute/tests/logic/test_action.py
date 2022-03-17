@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError, ValidationError
+from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError, TransmutatorError, ValidationError
 
 import pytest
 
@@ -545,6 +545,31 @@ class TestTransmuteAction:
             )
 
         assert "resource_number: the field value is immutable" in e.value.error_dict["message"]
+
+    def test_transmute_validator_without_args(self):
+        data = {
+            "field1": [
+                {"nested_field": {"foo": 2, "bar": 2}},
+            ]
+        }
+
+        tsm_schema = build_schema(
+            {
+                "field1": {
+                    "validators": [["tsm_get_nested"]],
+                },
+            }
+        )
+
+        with pytest.raises(TransmutatorError) as e:
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert e.value.error == "Arguments for validator weren't provided"
 
 
 @pytest.mark.usefixtures("clean_db")
