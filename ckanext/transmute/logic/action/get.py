@@ -12,7 +12,9 @@ from ckan.logic import validate
 from ckanext.transmute.types import TransmuteData, Field
 from ckanext.transmute.schema import SchemaParser, SchemaField
 from ckanext.transmute.schema import transmute_schema, validate_schema
-from ckanext.transmute.exception import ValidationError
+from ckanext.transmute.exception import ValidationError, TransmutatorError
+from ckanext.transmute.utils import get_transmutator
+
 
 log = logging.getLogger(__name__)
 
@@ -173,14 +175,11 @@ def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
     try:
         for validator in validators:
             if isinstance(validator, list):
-
-                # TODO show some error if there are less then 1 arg
                 if len(validator) <= 1:
-                    pass
-                
-                tk.get_validator(validator[0])(field, *validator[1:])
+                    raise TransmutatorError("Arguments for validator weren't provided")
+                field = get_transmutator(validator[0])(field, *validator[1:])
             else:
-                field = tk.get_validator(validator)(field)
+                field = get_transmutator(validator)(field)
     except df.Invalid as e:
         raise ValidationError({f"{field.type}:{field.field_name}": [e.error]})
 

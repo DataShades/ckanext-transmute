@@ -5,6 +5,7 @@ from ckanext.transmute.logic.action import get_actions
 from ckanext.transmute.logic.auth import get_auth_functions
 from ckanext.transmute.cli import get_commands
 from ckanext.transmute.transmutators import get_transmutators
+from ckanext.transmute.interfaces import ITransmute
 
 
 class TransmutePlugin(p.SingletonPlugin):
@@ -12,7 +13,7 @@ class TransmutePlugin(p.SingletonPlugin):
     p.implements(p.IActions)
     p.implements(p.IClick)
     p.implements(p.IAuthFunctions)
-    p.implements(p.IValidators)
+    p.implements(ITransmute)
 
     # IConfigurer
     def update_config(self, config_):
@@ -34,6 +35,6 @@ class TransmutePlugin(p.SingletonPlugin):
         """Registers a list of extension specific auth function"""
         return get_auth_functions()
 
-    # IValidators
-    def get_validators(self):
+    # ITransmute
+    def get_transmutators(self):
         return get_transmutators()
