@@ -101,6 +101,9 @@ def mutate_old_fields(data, definition, root):
 
         if field.value:
             if field.update:
+                if not isinstance(data[field_name], type(field.value)):
+                    raise ValidationError({f"{field_name}: the origin value has different type"})
+
                 if isinstance(data[field_name], dict):
                     data[field_name].update(field.value)
                 elif isinstance(data[field_name], list):

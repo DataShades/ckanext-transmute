@@ -546,6 +546,54 @@ class TestTransmuteAction:
 
         assert "resource_number: the field value is immutable" in e.value.error_dict["message"]
 
+    def test_transmute_update_different_types(self):
+        data: dict[str, Any] = {
+            "extras": ['one']
+        }
+
+        tsm_schema = build_schema(
+            {
+                "extras": {
+                    "value": {"test1": 1},
+                    "update": True
+                },
+            }
+        )
+
+        with pytest.raises(ValidationError) as e:
+            call_action(
+                    "tsm_transmute",
+                    data=data,
+                    schema=tsm_schema,
+                    root="Dataset",
+                )
+
+        assert "extras: the origin value has different type" in e.value.error_dict["message"]
+
+    def test_transmute_update_different_types(self):
+        data: dict[str, Any] = {
+            "extras": {"test1": 1}
+        }
+
+        tsm_schema = build_schema(
+            {
+                "extras": {
+                    "value": ['one'],
+                    "update": True
+                },
+            }
+        )
+
+        with pytest.raises(ValidationError) as e:
+            call_action(
+                    "tsm_transmute",
+                    data=data,
+                    schema=tsm_schema,
+                    root="Dataset",
+                )
+
+        assert "extras: the origin value has different type" in e.value.error_dict["message"]
+
     def test_transmute_validator_without_args(self):
         data = {
             "field1": [
