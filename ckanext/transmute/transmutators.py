@@ -105,12 +105,31 @@ def isodate(field: Field) -> Field:
 
 @transmutator
 def to_string(field: Field) -> Field:
+    """Casts field.value to str
+
+    Args:
+        field (Field): Field object
+
+    Returns:
+        Field: the same Field with new value
+    """
     field.value = str(field.value)
 
     return field
 
 @transmutator
 def get_nested(field: Field, *path) -> Field:
+    """Fetches a nested value from a field
+
+    Args:
+        field (Field): Field object
+
+    Raises:
+        df.Invalid: raises if path doesn't exist
+
+    Returns:
+        Field: the same Field with new value
+    """
     for key in path:
         try:
             field.value = field.value[key]
