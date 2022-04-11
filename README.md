@@ -135,7 +135,7 @@ There is an example of schema with nested types. The `root` field is mandatory, 
 
 ### Transmutators
 
-There are few default transmutators you can use in your schema. Of course, you can define a custom transmutator with the CKAN `IValidators` interface.
+There are few default transmutators you can use in your schema. Of course, you can define a custom transmutator with the `ITransmute` interface.
 - `tsm_name_validator` - Wrapper over CKAN default `name_validator` validator
 - `tsm_to_lowercase` - Casts string value to a lowercase
 - `tsm_to_uppercase` - Casts string value to a uppercase
@@ -164,6 +164,41 @@ The default transmutator must receive at least one mandatory argument - `field` 
 
 There is a possibility to provide more arguments to a validator like in `tsm_get_nested`. For this use a nested array with first item transmutator and other - arguments to it.
 
+### Keywords
+1. `map_to` (`str`) - changes the `field.name` in result dict. 
+2. `validators` (`list[str]`) - a list of transmutators that will be applied to a `field.value`. A transmutator could be a `string` or a `list` where the first item must be transmutator name and others are arbitrary values. Example:
+    ```
+    ...
+    "validators": [
+        ["tsm_get_nested", "nested_field", "en"],
+        "tsm_to_uppercase",
+    ,
+    ...
+    ```
+    There are two transmutators: `tsm_get_nested` and `tsm_to_uppercase`.
+3. `multiple` (`bool`, default: `False`) - if the field could have multiple items, e.g `resources` field in dataset, mark it as `multiple` to transmute all the items successively.
+    ```
+    ...
+    "resources": {
+        "type": "Resource",
+        "multiple": True
+    },
+    ...
+    ```
+4. `remove` (`bool`, default: `False`) - removes a field from a result dict if `True`.
+5. `default` (`Any`) - the default value that will be used if the original field.value evaluates to `False`.
+6. `default_from` (`str`) - acts similar to `default` but accepts a `field.name` of a sibling field from which we want to take its value. Sibling field is a field that located in the same `type`. The current implementation doesn't allow to point on fields from other `types`. 
+    ```
+    ...
+    "metadata_modified": {
+        "validators": ["tsm_isodate"],
+        "default_from": "metadata_created",
+    },
+    ...
+    ```
+7. `replace_from` (`str`) - acts similar to `default_from` but replaces the origin value whenever it's empty or not.
+8. `value` (`Any`) - a value that will be used for a field. This keyword has the highest priority. Could be used to create a new field with an arbitrary value.
+9. `update` (`bool`, default: `False) - if the original value is mutable (`array, object`) - you can update it. You can only update field values of the same types.
 
 ## Installation
 
