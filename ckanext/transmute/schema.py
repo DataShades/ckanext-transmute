@@ -59,7 +59,7 @@ class SchemaField:
         field = self.definition["fields"].get(field_name)
 
         if not field:
-            raise SchemaFieldError(f"Field: `replace_from` sibling field is not exists: {field_name}")
+            raise SchemaFieldError(f"Field: sibling field is not exists: {field_name}")
 
         return field_name
 

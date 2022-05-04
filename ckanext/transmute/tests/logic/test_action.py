@@ -163,7 +163,7 @@ class TestTransmuteAction:
 
         assert (
             e.value.error
-            == f"Field: `replace_from` sibling field is not exists: {target_field}"
+            == f"Field: sibling field is not exists: {target_field}"
         )
 
     def test_transmute_replace_from(self):
