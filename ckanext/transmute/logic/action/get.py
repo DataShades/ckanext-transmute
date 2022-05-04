@@ -141,7 +141,10 @@ def create_new_fields(data, definition, root):
     for field_name, field in schema["fields"].items():
         if field_name in data:
             continue
-        
+
+        if field.default:
+            data[field_name] = field.default
+
         if field.default_from:
             data[field_name] = data[field.get_default_from()]
             
