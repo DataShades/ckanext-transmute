@@ -199,3 +199,70 @@ class TestTransmutators:
 
         new_field_value = f"https://ckan.url/dataset/1"
         assert result["field_name"] == new_field_value
+
+    def test_unique_only(self):
+        """You can skip using $self if you want for some reason"""
+        data: dict[str, Any] = {"field_name": [1, 2, 3, 3, 4, 5, 6, 6]}
+
+        tsm_schema = build_schema(
+            {
+                "field_name": {
+                    "validators": [
+                        "tsm_unique_only"
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_name"] == [1, 2, 3, 4, 5, 6]
+
+    def test_unique_only_for_not_list(self):
+        """You can skip using $self if you want for some reason"""
+        data: dict[str, Any] = {"field_name": 1}
+
+        tsm_schema = build_schema(
+            {
+                "field_name": {
+                    "validators": [
+                        "tsm_unique_only"
+                    ],
+                },
+            }
+        )
+        with pytest.raises(ValidationError) as e:
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+    def test_unique_only_empty_list(self):
+        """You can skip using $self if you want for some reason"""
+        data: dict[str, Any] = {"field_name": []}
+
+        tsm_schema = build_schema(
+            {
+                "field_name": {
+                    "validators": [
+                        "tsm_unique_only"
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_name"] == []

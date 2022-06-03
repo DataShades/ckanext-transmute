@@ -187,6 +187,8 @@ schema = ...
     },
     ...
 ```
+- `tsm_unique_only` - Preserve only unique values from a list. Works only with lists.
+
 
 This will take a value for a `title` field from `title_translated` field. Because `title_translated` is an array with nested objects, we are using the `tsm_get_nested` transmutator to achieve the value from it.
 

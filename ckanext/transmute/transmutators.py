@@ -174,3 +174,19 @@ def concat(field: Field, *strings) -> Field:
         raise df.Invalid(tk._("No arguments for concat"))
     field.value = "".join(str(s) for s in strings).replace("$self", field.value)
     return field
+
+
+@transmutator
+def unique_only(field: Field) -> Field:
+    """Preserve only unique values from list
+
+    Args:
+        field (Field): Field object
+
+    Returns:
+        Field: the same Field with new value
+    """
+    if not isinstance(field.value, list):
+        raise df.Invalid(tk._("Field value must be an array"))
+    field.value = list(set(field.value))
+    return field

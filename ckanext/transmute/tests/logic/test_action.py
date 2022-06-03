@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from ckanext.transmute.exception import (
-    SchemaParsingError,
-    SchemaFieldError
-)
+from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
 
 import pytest
 
