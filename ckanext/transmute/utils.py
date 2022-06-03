@@ -90,8 +90,26 @@ def get_json_schema():
                                             },
                                             "map": {"type": "string"},
                                             "default": {"$ref": "#/$defs/anytype"},
-                                            "default_from": {"type": "string"},
-                                            "replace_from": {"type": "string"},
+                                            "default_from": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "array",
+                                                        "minItems": 1,
+                                                        "items": {"type": "string"},
+                                                    },
+                                                    {"type": "string"},
+                                                ]
+                                            },
+                                            "replace_from": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "array",
+                                                        "minItems": 1,
+                                                        "items": {"type": "string"},
+                                                    },
+                                                    {"type": "string"},
+                                                ]
+                                            },
                                             "value": {"$ref": "#/$defs/anytype"},
                                             "multiple": {"type": "boolean"},
                                             "remove": {"type": "boolean"},

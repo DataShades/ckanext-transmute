@@ -3,16 +3,14 @@ from __future__ import annotations
 from typing import Any
 from ckanext.transmute.exception import (
     SchemaParsingError,
-    SchemaFieldError,
-    TransmutatorError,
-    ValidationError,
+    SchemaFieldError
 )
 
 import pytest
 
 import ckan.lib.helpers as h
-import ckan.logic as logic
 import ckan.tests.factories as factories
+from ckan.logic import ValidationError
 from ckan.tests.helpers import call_action
 
 from ckanext.transmute.tests.helpers import build_schema
@@ -74,7 +72,7 @@ class TestTransmuteAction:
             root="Dataset",
         )
 
-        result["metadata_created"] == h.date_str_to_datetime("2022-02-03")
+        assert result["metadata_created"] == h.date_str_to_datetime(metadata_created)
 
     def test_transmute_default_from_without_origin_value(self, tsm_schema):
         """The `default_from` must copy value from target field if the origin
@@ -197,6 +195,168 @@ class TestTransmuteAction:
         )
 
         assert result["metadata_modified"] == result["metadata_created"]
+
+    def test_transmute_replace_from_multiple(self):
+        """Replace from multiple fields must combine values of those fields"""
+
+        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {
+                    "replace_from": ["field_1", "field_2"],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_3"] == data["field_1"] + data["field_2"]
+
+    def test_transmute_replace_from_multiple_with_not_existed_one(self):
+        """Replace from multiple fields if one of listed field is not exist
+        must raise an error"""
+
+        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_3": {
+                    "replace_from": ["field_1", "field_2"],
+                },
+            }
+        )
+
+        with pytest.raises(SchemaFieldError) as e:
+            result = call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert e.value.error == f"Field: sibling field is not exists: field_2"
+
+    def test_transmute_replace_from_multiple_different_types(self):
+        """Replace from multiple fields must combine values of those fields"""
+
+        data = {
+            "field_1": [1, 2, 3],
+            "field_2": 1,
+            "field_3": {"hello": "world"},
+            "field_4": "",
+        }
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {},
+                "field_4": {
+                    "replace_from": ["field_1", "field_2", "field_3"],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_4"] == data["field_1"] + [data["field_2"]] + [
+            data["field_3"]
+        ]
+
+    def test_transmute_default_from_multiple(self):
+        """Default from multiple fields must combine values of those fields"""
+
+        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {
+                    "default_from": ["field_1", "field_2"],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_3"] == data["field_1"] + data["field_2"]
+
+    def test_transmute_default_from_multiple_with_not_existed_one(self):
+        """Default from multiple fields if one of listed field is not exist
+        must raise an error"""
+
+        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_3": {
+                    "default_from": ["field_1", "field_2"],
+                },
+            }
+        )
+
+        with pytest.raises(SchemaFieldError) as e:
+            result = call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert e.value.error == f"Field: sibling field is not exists: field_2"
+
+    def test_transmute_default_from_multiple_different_types(self):
+        """Default from multiple fields must combine values of those fields"""
+
+        data = {
+            "field_1": [1, 2, 3],
+            "field_2": 1,
+            "field_3": {"hello": "world"},
+            "field_4": "",
+        }
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {},
+                "field_4": {
+                    "default_from": ["field_1", "field_2", "field_3"],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_4"] == data["field_1"] + [data["field_2"]] + [
+            data["field_3"]
+        ]
 
     def test_transmute_replace_from_nested(self):
         data = {
@@ -350,7 +510,7 @@ class TestTransmuteAction:
 
     def test_transmute_no_data(self):
         """Data is required"""
-        with pytest.raises(logic.ValidationError):
+        with pytest.raises(ValidationError):
             call_action(
                 "tsm_transmute",
                 schema={"root": "Dataset", "types": {"Dataset": {}}},
@@ -358,7 +518,7 @@ class TestTransmuteAction:
 
     def test_transmute_no_schema(self):
         """Schema is required"""
-        with pytest.raises(logic.ValidationError):
+        with pytest.raises(ValidationError):
             call_action("tsm_transmute", data={"title": "test"})
 
     def test_transmute_empty_data(self):
@@ -404,6 +564,22 @@ class TestTransmuteAction:
 
         assert "metadata_modified" in result
         assert result["metadata_modified"] == result["metadata_created"]
+
+    def test_transmute_new_field_from_default_and_value(self):
+        """Default runs before value"""
+        data: dict[str, Any] = {}
+
+        tsm_schema = build_schema({"field1": {"default": 101, "value": 102}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert "field1" in result
+        assert result["field1"] == 101
 
     def test_transmute_new_field_from_value(self):
         """We can define a new field in schema and it will be
@@ -549,54 +725,6 @@ class TestTransmuteAction:
             "extras: the origin value has different type"
             in e.value.error_dict["message"]
         )
-
-    def test_transmute_update_different_types(self):
-        data: dict[str, Any] = {"extras": {"test1": 1}}
-
-        tsm_schema = build_schema(
-            {
-                "extras": {"value": ["one"], "update": True},
-            }
-        )
-
-        with pytest.raises(ValidationError) as e:
-            call_action(
-                "tsm_transmute",
-                data=data,
-                schema=tsm_schema,
-                root="Dataset",
-            )
-
-        assert (
-            "extras: the origin value has different type"
-            in e.value.error_dict["message"]
-        )
-
-    def test_transmute_validator_without_args(self):
-        data = {
-            "field1": [
-                {"nested_field": {"foo": 2, "bar": 2}},
-            ]
-        }
-
-        tsm_schema = build_schema(
-            {
-                "field1": {
-                    "validators": [["tsm_get_nested"]],
-                },
-            }
-        )
-
-        with pytest.raises(TransmutatorError) as e:
-            call_action(
-                "tsm_transmute",
-                data=data,
-                schema=tsm_schema,
-                root="Dataset",
-            )
-
-        assert e.value.error == "Arguments for validator weren't provided"
-
 
 @pytest.mark.usefixtures("clean_db")
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")

@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import logging
-from re import I
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import ckan.plugins.toolkit as tk
 import ckan.lib.plugins as lib_plugins
 import ckan.lib.navl.dictization_functions as df
-from ckan.logic import validate
+from ckan.logic import validate, ValidationError
 
 from ckanext.transmute.types import TransmuteData, Field
 from ckanext.transmute.schema import SchemaParser, SchemaField
 from ckanext.transmute.schema import transmute_schema, validate_schema
-from ckanext.transmute.exception import ValidationError, TransmutatorError
+from ckanext.transmute.exception import TransmutatorError
 from ckanext.transmute.utils import get_transmutator
 
 
@@ -91,42 +90,42 @@ def mutate_old_fields(data, definition, root):
             continue
 
         if field.default and not value:
-            data[field_name] = value = field.default
+            data[field.name] = value = field.default
 
         if field.default_from and not value:
-            data[field_name] = value = data[field.get_default_from()]
+            data[field.name] = value = _default_from(data, field)
 
         if field.replace_from:
-            data[field_name] = value = data[field.get_replace_from()]
+            data[field.name] = value = _replace_from(data, field)
 
         if field.value:
             if field.update:
-                if not isinstance(data[field_name], type(field.value)):
+                if not isinstance(data[field.name], type(field.value)):
                     raise ValidationError(
-                        {f"{field_name}: the origin value has different type"}
+                        {f"{field.name}: the origin value has different type"}
                     )
 
-                if isinstance(data[field_name], dict):
-                    data[field_name].update(field.value)
-                elif isinstance(data[field_name], list):
-                    data[field_name].extend(field.value)
+                if isinstance(data[field.name], dict):
+                    data[field.name].update(field.value)
+                elif isinstance(data[field.name], list):
+                    data[field.name].extend(field.value)
                 else:
                     raise ValidationError(
-                        {f"{field_name}: the field value is immutable"}
+                        {f"{field.name}: the field value is immutable"}
                     )
             else:
-                data[field_name] = value = field.value
+                data[field.name] = value = field.value
 
         if field.is_multiple():
             for nested_field in value:
                 _transmute_data(nested_field, definition, field.type)
         else:
-            data[field_name] = _apply_validators(
-                Field(field_name, value, root), field.validators
+            data[field.name] = _apply_validators(
+                Field(field.name, value, root), field.validators
             )
 
         if field.map_to:
-            data[field.map_to] = data.pop(field_name)
+            data[field.map_to] = data.pop(field.name)
 
 
 def create_new_fields(data, definition, root):
@@ -146,17 +145,14 @@ def create_new_fields(data, definition, root):
         if field_name in data:
             continue
 
-        if field.default:
-            data[field_name] = field.default
+        if field.default or field.value:
+            data[field_name] = field.default or field.value
 
         if field.default_from:
-            data[field_name] = data[field.get_default_from()]
+            data[field_name] = _default_from(data, field)
 
         if field.replace_from:
-            data[field_name] = data[field.get_replace_from()]
-
-        if field.value:
-            data[field_name] = field.value
+            data[field_name] = _replace_from(data, field)
 
         if field_name not in data:
             continue
@@ -164,6 +160,37 @@ def create_new_fields(data, definition, root):
         data[field_name] = _apply_validators(
             Field(field_name, data[field_name], root), field.validators
         )
+
+
+def _default_from(data, field):
+    default_from: Union[list[str], str] = field.get_default_from()
+    return _get_external_fields(data, default_from)
+
+
+def _replace_from(data, field):
+    replace_from: Union[list[str], str] = field.get_replace_from()
+    return _get_external_fields(data, replace_from)
+
+
+def _get_external_fields(data, external_fields):
+    if isinstance(external_fields, list):
+        return _combine_from_fields(data, external_fields)
+    return data[external_fields]
+
+
+def _combine_from_fields(data, combine_fields: list[str]):
+    value = []
+
+    for field_name in combine_fields:
+        field_value = data[field_name]
+
+        if isinstance(field_value, list):
+            for item in data[field_name]:
+                value.append(item)
+        else:
+            value.append(field_value)
+
+    return value
 
 
 def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
@@ -192,6 +219,8 @@ def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
                 field = get_transmutator(validator)(field)
     except df.Invalid as e:
         raise ValidationError({f"{field.type}:{field.field_name}": [e.error]})
+    except TypeError as e:
+        raise TransmutatorError(str(e))
 
     return field.value
 
@@ -214,7 +243,7 @@ def validate(ctx, data_dict: dict[str, Any]) -> Optional[dict[str, str]]:
     return data, errors
 
 
-def _set_package_type(data_dict: dict[str, Any]) -> str:
+def _set_package_type(data_dict: dict[str, Any]):
     """Set a package type
 
     Args:

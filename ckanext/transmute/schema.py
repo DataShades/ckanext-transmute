@@ -1,4 +1,6 @@
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any, Optional, Union
 
 import copy
 
@@ -16,13 +18,13 @@ class SchemaField:
         definition: dict,
         map_to: Optional[str] = None,
         validators: Optional[list] = None,
-        multiple: bool = None,
-        remove: bool = None,
+        multiple: bool = False,
+        remove: bool = False,
         default: Optional[Any] = None,
         default_from: Optional[str] = None,
         value: Optional[Any] = None,
         replace_from: Optional[str] = None,
-        update: bool = None,
+        update: bool = False,
     ):
         self.name = name
         self.type = type_
@@ -47,14 +49,28 @@ class SchemaField:
     def is_multiple(self) -> bool:
         return bool(self.multiple)
 
-    def get_default_from(self) -> Optional[Any]:
+    def get_default_from(self) -> Union[list[str], str]:
         if not self.default_from:
             raise SchemaFieldError("Field: `default_from` field name is not defined")
+
+        if isinstance(self.default_from, list):
+            return [
+                self._get_sibling_field_name(field_name)
+                for field_name in self.default_from
+            ]
+
         return self._get_sibling_field_name(self.default_from)
 
-    def get_replace_from(self) -> Optional[Any]:
+    def get_replace_from(self) -> Union[list[str], str]:
         if not self.replace_from:
             raise SchemaFieldError("Field: `replace_from` field name is not defined")
+
+        if isinstance(self.replace_from, list):
+            return [
+                self._get_sibling_field_name(field_name)
+                for field_name in self.replace_from
+            ]
+
         return self._get_sibling_field_name(self.replace_from)
 
     def _get_sibling_field_name(self, field_name: str) -> Optional[Any]:
