@@ -57,7 +57,7 @@ def _transmute_data(data, definition, root="Dataset"):
 
     if not schema:
         return
-    
+
     mutate_old_fields(data, definition, root)
     create_new_fields(data, definition, root)
 
@@ -65,13 +65,13 @@ def _transmute_data(data, definition, root="Dataset"):
 def mutate_old_fields(data, definition, root):
     """Checks all of the data fields and mutate them
     according to the provided schema
-    
+
     New fields won't be created here, because we are
     only traversing the data dictionary
-    
+
     We can't traverse only Data or only Schema, because
     otherwise, the user will have to define all of the fields
-    that could exist in data 
+    that could exist in data
 
     Args:
         data (dict: [str, Any]): a data to mutate
@@ -79,7 +79,7 @@ def mutate_old_fields(data, definition, root):
         root (str): a root schema type
     """
     schema = definition.types[root]
-    
+
     for field_name, value in data.copy().items():
         field: SchemaField = schema["fields"].get(field_name)
 
@@ -102,14 +102,18 @@ def mutate_old_fields(data, definition, root):
         if field.value:
             if field.update:
                 if not isinstance(data[field_name], type(field.value)):
-                    raise ValidationError({f"{field_name}: the origin value has different type"})
+                    raise ValidationError(
+                        {f"{field_name}: the origin value has different type"}
+                    )
 
                 if isinstance(data[field_name], dict):
                     data[field_name].update(field.value)
                 elif isinstance(data[field_name], list):
                     data[field_name].extend(field.value)
                 else:
-                    raise ValidationError({f"{field_name}: the field value is immutable"})
+                    raise ValidationError(
+                        {f"{field_name}: the field value is immutable"}
+                    )
             else:
                 data[field_name] = value = field.value
 
@@ -128,16 +132,16 @@ def mutate_old_fields(data, definition, root):
 def create_new_fields(data, definition, root):
     """New fields are going to be created according
     to the provided schema
-    
+
     If the defined field is not exist in the data dict
     we are going to create it
-    
+
     The newly created field's value could be inherited from
     an existing field. This field must be defined in the
     schema.
     """
     schema = definition.types[root]
-    
+
     for field_name, field in schema["fields"].items():
         if field_name in data:
             continue
@@ -147,13 +151,13 @@ def create_new_fields(data, definition, root):
 
         if field.default_from:
             data[field_name] = data[field.get_default_from()]
-            
+
         if field.replace_from:
             data[field_name] = data[field.get_replace_from()]
 
         if field.value:
             data[field_name] = field.value
-        
+
         if field_name not in data:
             continue
 
@@ -204,7 +208,8 @@ def validate(ctx, data_dict: dict[str, Any]) -> Optional[dict[str, str]]:
     package_plugin = lib_plugins.lookup_package_plugin(data["type"])
 
     data, errors = lib_plugins.plugin_validate(
-        package_plugin, ctx, data, schema, 'package_create')
+        package_plugin, ctx, data, schema, "package_create"
+    )
 
     return data, errors
 
@@ -218,7 +223,7 @@ def _set_package_type(data_dict: dict[str, Any]) -> str:
     Returns:
         str: package type
     """
-    if 'type' in data_dict and data_dict['type']:
+    if "type" in data_dict and data_dict["type"]:
         return
 
     package_plugin = lib_plugins.lookup_package_plugin()
@@ -226,15 +231,16 @@ def _set_package_type(data_dict: dict[str, Any]) -> str:
     try:
         package_type = package_plugin.package_types()[0]
     except (AttributeError, IndexError):
-        package_type = 'dataset'
-    
+        package_type = "dataset"
+
     data_dict["type"] = package_type
+
 
 def _get_package_schema(ctx):
     package_plugin = lib_plugins.lookup_package_plugin()
 
-    if 'schema' in ctx:
-        schema = ctx['schema']
+    if "schema" in ctx:
+        schema = ctx["schema"]
     else:
         schema = package_plugin.create_package_schema()
 

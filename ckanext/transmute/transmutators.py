@@ -24,7 +24,7 @@ def name_validator(field: Field) -> Field:
 
     Args:
         field (Field): Field object
-    
+
     Raises:
         df.Invalid: if ``value`` is not a valid name
 
@@ -117,6 +117,7 @@ def to_string(field: Field) -> Field:
 
     return field
 
+
 @transmutator
 def get_nested(field: Field, *path) -> Field:
     """Fetches a nested value from a field
@@ -135,5 +136,5 @@ def get_nested(field: Field, *path) -> Field:
             field.value = field.value[key]
         except TypeError:
             raise df.Invalid(tk._("Error parsing path"))
-    
+
     return field

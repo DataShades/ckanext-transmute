@@ -7,6 +7,5 @@ def get_commands():
 
 @click.group()
 def transmute():
-    """Basic CLI commands group for ckanext-transmute
-    """
+    """Basic CLI commands group for ckanext-transmute"""
     pass

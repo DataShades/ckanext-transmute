@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from typing import Any
-from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError, TransmutatorError, ValidationError
+from ckanext.transmute.exception import (
+    SchemaParsingError,
+    SchemaFieldError,
+    TransmutatorError,
+    ValidationError,
+)
 
 import pytest
 
@@ -161,10 +166,7 @@ class TestTransmuteAction:
                 root="Dataset",
             )
 
-        assert (
-            e.value.error
-            == f"Field: sibling field is not exists: {target_field}"
-        )
+        assert e.value.error == f"Field: sibling field is not exists: {target_field}"
 
     def test_transmute_replace_from(self):
         """The `replace_from` must copy value from target field and replace
@@ -436,13 +438,9 @@ class TestTransmuteAction:
 
         assert "field1" in result
         assert result["field1"] == 101
-    
+
     def test_transmute_replacing_without_updating(self):
-        data: dict[str, Any] = {
-            "extras": [
-                {"key": "test", "value": 0}
-            ]
-        }
+        data: dict[str, Any] = {"extras": [{"key": "test", "value": 0}]}
 
         extras = [
             {"key": "theme", "value": "nature"},
@@ -450,9 +448,7 @@ class TestTransmuteAction:
         ]
         tsm_schema = build_schema(
             {
-                "extras": {
-                    "value": extras
-                },
+                "extras": {"value": extras},
             }
         )
 
@@ -464,13 +460,9 @@ class TestTransmuteAction:
         )
 
         assert result["extras"] == extras
-    
+
     def test_transmute_update_value_list(self):
-        data: dict[str, Any] = {
-            "extras": [
-                {"key": "test", "value": 0}
-            ]
-        }
+        data: dict[str, Any] = {"extras": [{"key": "test", "value": 0}]}
 
         extras = [
             {"key": "theme", "value": "nature"},
@@ -479,10 +471,7 @@ class TestTransmuteAction:
 
         tsm_schema = build_schema(
             {
-                "extras": {
-                    "value": extras,
-                    "update": True
-                },
+                "extras": {"value": extras, "update": True},
             }
         )
 
@@ -497,16 +486,11 @@ class TestTransmuteAction:
         assert len(result["extras"]) == 3
 
     def test_transmute_update_value_dict(self):
-        data: dict[str, Any] = {
-            "extras": {"test1": 1}
-        }
+        data: dict[str, Any] = {"extras": {"test1": 1}}
 
         tsm_schema = build_schema(
             {
-                "extras": {
-                    "value": {"test2": 2, "test3": 3},
-                    "update": True
-                },
+                "extras": {"value": {"test2": 2, "test3": 3}, "update": True},
             }
         )
 
@@ -518,21 +502,16 @@ class TestTransmuteAction:
         )
 
         assert len(result["extras"]) == 3
-        assert 'test1' in result["extras"]
-        assert 'test2' in result["extras"]
-        assert 'test3' in result["extras"]
+        assert "test1" in result["extras"]
+        assert "test2" in result["extras"]
+        assert "test3" in result["extras"]
 
     def test_transmute_update_value_immutable(self):
-        data: dict[str, Any] = {
-            "resource_number": 101
-        }
+        data: dict[str, Any] = {"resource_number": 101}
 
         tsm_schema = build_schema(
             {
-                "resource_number": {
-                    "value": 111,
-                    "update": True
-                },
+                "resource_number": {"value": 111, "update": True},
             }
         )
 
@@ -544,55 +523,54 @@ class TestTransmuteAction:
                 root="Dataset",
             )
 
-        assert "resource_number: the field value is immutable" in e.value.error_dict["message"]
+        assert (
+            "resource_number: the field value is immutable"
+            in e.value.error_dict["message"]
+        )
 
     def test_transmute_update_different_types(self):
-        data: dict[str, Any] = {
-            "extras": ['one']
-        }
+        data: dict[str, Any] = {"extras": ["one"]}
 
         tsm_schema = build_schema(
             {
-                "extras": {
-                    "value": {"test1": 1},
-                    "update": True
-                },
+                "extras": {"value": {"test1": 1}, "update": True},
             }
         )
 
         with pytest.raises(ValidationError) as e:
             call_action(
-                    "tsm_transmute",
-                    data=data,
-                    schema=tsm_schema,
-                    root="Dataset",
-                )
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
 
-        assert "extras: the origin value has different type" in e.value.error_dict["message"]
+        assert (
+            "extras: the origin value has different type"
+            in e.value.error_dict["message"]
+        )
 
     def test_transmute_update_different_types(self):
-        data: dict[str, Any] = {
-            "extras": {"test1": 1}
-        }
+        data: dict[str, Any] = {"extras": {"test1": 1}}
 
         tsm_schema = build_schema(
             {
-                "extras": {
-                    "value": ['one'],
-                    "update": True
-                },
+                "extras": {"value": ["one"], "update": True},
             }
         )
 
         with pytest.raises(ValidationError) as e:
             call_action(
-                    "tsm_transmute",
-                    data=data,
-                    schema=tsm_schema,
-                    root="Dataset",
-                )
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
 
-        assert "extras: the origin value has different type" in e.value.error_dict["message"]
+        assert (
+            "extras: the origin value has different type"
+            in e.value.error_dict["message"]
+        )
 
     def test_transmute_validator_without_args(self):
         data = {
@@ -630,7 +608,7 @@ class TestValidateAction:
             "id": dataset["id"],
             "name": "Test name",
             "private": "1",
-            "author_email": "not an email"
+            "author_email": "not an email",
         }
 
         data, errors = call_action(

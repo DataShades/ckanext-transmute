@@ -49,5 +49,6 @@ To temporary patch the CKAN configuration for the duration of a test you can use
 """
 import ckanext.transmute.plugin as plugin
 
+
 def test_plugin():
     pass

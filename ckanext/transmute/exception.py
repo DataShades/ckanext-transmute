@@ -17,8 +17,10 @@ class SchemaParsingError(BaseException):
 class SchemaFieldError(BaseException):
     pass
 
+
 class UnknownTransmutator(BaseException):
     pass
+
 
 class TransmutatorError(BaseException):
     pass

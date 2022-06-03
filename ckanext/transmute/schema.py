@@ -38,18 +38,20 @@ class SchemaField:
         self.update = update
 
     def __repr__(self):
-        return (f"<Field name={self.name} map_to={self.map_to}"
-                f" type={self.type} multiple={self.multiple}"
-                f" validators={self.validators}>")
+        return (
+            f"<Field name={self.name} map_to={self.map_to}"
+            f" type={self.type} multiple={self.multiple}"
+            f" validators={self.validators}>"
+        )
 
     def is_multiple(self) -> bool:
         return bool(self.multiple)
-    
+
     def get_default_from(self) -> Optional[Any]:
         if not self.default_from:
             raise SchemaFieldError("Field: `default_from` field name is not defined")
         return self._get_sibling_field_name(self.default_from)
-    
+
     def get_replace_from(self) -> Optional[Any]:
         if not self.replace_from:
             raise SchemaFieldError("Field: `replace_from` field name is not defined")
@@ -62,6 +64,7 @@ class SchemaField:
             raise SchemaFieldError(f"Field: sibling field is not exists: {field_name}")
 
         return field_name
+
 
 class SchemaParser:
     def __init__(self, schema):
@@ -121,7 +124,7 @@ class SchemaParser:
             default_from=field_meta.get("default_from", None),
             value=field_meta.get("value", None),
             replace_from=field_meta.get("replace_from", None),
-            update=field_meta.get("update", False)
+            update=field_meta.get("update", False),
         )
 
 
@@ -131,6 +134,7 @@ def transmute_schema(not_missing):
         "data": [not_missing],
         "schema": [not_missing],
     }
+
 
 @validator_args
 def validate_schema(not_missing):

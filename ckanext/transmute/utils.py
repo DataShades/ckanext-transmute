@@ -18,15 +18,18 @@ def get_transmutator(transmutator: str):
     try:
         return _transmutator_cache[transmutator]
     except KeyError:
-        raise UnknownTransmutator(f'Transmutator {transmutator} does not exist')
+        raise UnknownTransmutator(f"Transmutator {transmutator} does not exist")
+
 
 def get_all_transmutators() -> list[str]:
     if not _transmutator_cache:
         for plugin in reversed(list(p.PluginImplementations(ITransmute))):
             for name, fn in plugin.get_transmutators().items():
-                log.debug(f'Transmutator function {name} from plugin {plugin.name} was inserted')
+                log.debug(
+                    f"Transmutator function {name} from plugin {plugin.name} was inserted"
+                )
                 _transmutator_cache[name] = fn
-    
+
     return list(_transmutator_cache.keys())
 
 
