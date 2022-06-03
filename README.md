@@ -131,7 +131,7 @@ Then, our schema must be something like that:
     }
 ```
 
-There is an example of schema with nested types. The `root` field is mandatory, it's must contain a main type name, from which the scheme starts. As you can see, `Dataset` type contains `Resource` type which contans `Sub-Resource`. 
+There is an example of schema with nested types. The `root` field is mandatory, it's must contain a main type name, from which the scheme starts. As you can see, `Dataset` type contains `Resource` type which contans `Sub-Resource`.
 
 ### Transmutators
 
@@ -143,7 +143,7 @@ There are few default transmutators you can use in your schema. Of course, you c
 - `tsm_isodate` - Wrapper over CKAN default `isodate` validator. Mutates an iso-like string to datetime object
 - `tsm_to_string` - Casts a `field.value` to `str`
 - `tsm_get_nested` - Allows you to pick up a value from a nested structure. Example:
-```         
+```
 data = "title_translated": [
     {"nested_field": {"en": "en title", "ar": "العنوان ar"}},
 ]
@@ -158,6 +158,36 @@ schema = ...
     },
     ...
 ```
+- `tsm_trim_string` - Trim string with max lenght. Example to trim `hello world` to `hello`:
+```
+data = {"field_name": "hello world}
+
+schema = ...
+    "field_name": {
+        "validators": [
+            ["tsm_trim_string", 5]
+        ],
+    },
+    ...
+```
+- `tsm_concat` - Trim string with max lenght. Use `$self` to point on field value. Example:
+```
+data = {"id": "dataset-1}
+
+schema = ...
+    "package_url": {
+        "replace_from": "id",
+        "validators": [
+            [
+                "tsm_concat",
+                "https://site.url/dataset/",
+                "$self",
+            ]
+        ],
+    },
+    ...
+```
+
 This will take a value for a `title` field from `title_translated` field. Because `title_translated` is an array with nested objects, we are using the `tsm_get_nested` transmutator to achieve the value from it.
 
 The default transmutator must receive at least one mandatory argument - `field` object. Field contains few properties: `field_name`, `value` and `type`.
@@ -165,7 +195,7 @@ The default transmutator must receive at least one mandatory argument - `field` 
 There is a possibility to provide more arguments to a validator like in `tsm_get_nested`. For this use a nested array with first item transmutator and other - arguments to it.
 
 ### Keywords
-1. `map_to` (`str`) - changes the `field.name` in result dict. 
+1. `map_to` (`str`) - changes the `field.name` in result dict.
 2. `validators` (`list[str]`) - a list of transmutators that will be applied to a `field.value`. A transmutator could be a `string` or a `list` where the first item must be transmutator name and others are arbitrary values. Example:
     ```
     ...
@@ -187,7 +217,7 @@ There is a possibility to provide more arguments to a validator like in `tsm_get
     ```
 4. `remove` (`bool`, default: `False`) - removes a field from a result dict if `True`.
 5. `default` (`Any`) - the default value that will be used if the original field.value evaluates to `False`.
-6. `default_from` (`str`) - acts similar to `default` but accepts a `field.name` of a sibling field from which we want to take its value. Sibling field is a field that located in the same `type`. The current implementation doesn't allow to point on fields from other `types`. 
+6. `default_from` (`str`) - acts similar to `default` but accepts a `field.name` of a sibling field from which we want to take its value. Sibling field is a field that located in the same `type`. The current implementation doesn't allow to point on fields from other `types`.
     ```
     ...
     "metadata_modified": {
