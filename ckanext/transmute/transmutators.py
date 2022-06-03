@@ -136,5 +136,41 @@ def get_nested(field: Field, *path) -> Field:
             field.value = field.value[key]
         except TypeError:
             raise df.Invalid(tk._("Error parsing path"))
+    return field
 
+
+@transmutator
+def trim_string(field: Field, max_length) -> Field:
+    """Trim string lenght
+
+    Args:
+        value (Field): Field object
+        max_length (int): String max length
+
+    Returns:
+        Field: the same Field object if it's valid
+    """
+
+    if not isinstance(max_length, int):
+        raise df.Invalid(tk._("max_length must be integer"))
+
+    field.value = field.value[:max_length]
+    return field
+
+
+@transmutator
+def concat(field: Field, *strings) -> Field:
+    """Concat strings to build a new one
+    Use $self to point on field value
+
+    Args:
+        field (Field): Field object
+        *strings (tuple[str]): strings to concat with
+
+    Returns:
+        Field: the same Field with new value
+    """
+    if not strings:
+        raise df.Invalid(tk._("No arguments for concat"))
+    field.value = "".join(str(s) for s in strings).replace("$self", field.value)
     return field
