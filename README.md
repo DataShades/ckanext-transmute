@@ -140,7 +140,7 @@ There are few default transmutators you can use in your schema. Of course, you c
 - `tsm_to_lowercase` - Casts string value to a lowercase
 - `tsm_to_uppercase` - Casts string value to a uppercase
 - `tsm_string_only` - Validates if `field.value` is string
-- `tsm_isodate` - Wrapper over CKAN default `isodate` validator. Mutates an iso-like string to datetime object
+- `tsm_isodate` - Validates datetime string. Mutates an iso-like string to datetime object
 - `tsm_to_string` - Casts a `field.value` to `str`
 - `tsm_get_nested` - Allows you to pick up a value from a nested structure. Example:
 ```

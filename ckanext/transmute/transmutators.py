@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import Callable, Any
 
+from dateutil.parser import parse, ParserError
+
 import ckan.plugins.toolkit as tk
 import ckan.lib.navl.dictization_functions as df
 
@@ -85,7 +87,7 @@ def string_only(field: Field) -> Field:
 
 @transmutator
 def isodate(field: Field) -> Field:
-    """Wrapper over CKAN default `isodate` validator
+    """Validates datetime string
     Mutates an iso-like string to datetime object
 
     Args:
@@ -97,8 +99,11 @@ def isodate(field: Field) -> Field:
     Returns:
         Field: the same Field with casted value
     """
-    name_validator = tk.get_validator("isodate")
-    field.value = name_validator(field.value, {})
+
+    try:
+        field.value = parse(field.value)
+    except ParserError:
+        raise df.Invalid(tk._("Date format incorrect"))
 
     return field
 
