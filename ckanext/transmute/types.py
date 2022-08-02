@@ -15,3 +15,4 @@ class Field(RecordClass):
     field_name: str
     value: Any
     type: str
+    data: dict[str, Any]
