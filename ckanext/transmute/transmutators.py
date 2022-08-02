@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Callable, Any
+from datetime import datetime
 
 from dateutil.parser import parse, ParserError
 
@@ -100,6 +101,9 @@ def isodate(field: Field) -> Field:
         Field: the same Field with casted value
     """
 
+    if isinstance(field.value, datetime):
+        return field
+
     try:
         field.value = parse(field.value)
     except ParserError:
@@ -177,7 +181,24 @@ def concat(field: Field, *strings) -> Field:
     """
     if not strings:
         raise df.Invalid(tk._("No arguments for concat"))
-    field.value = "".join(str(s) for s in strings).replace("$self", field.value)
+
+    value_chunks = []
+
+    for s in strings:
+        if s == "$self":
+            value_chunks.append(field.value)
+        elif isinstance(s, str) and s.startswith("$"):
+            ref_field_name: str = s.lstrip("$").strip()
+
+            if ref_field_name not in field.data:
+                continue
+
+            value_chunks.append(field.data[ref_field_name])
+        else:
+            value_chunks.append(s)
+
+    field.value = "".join(str(s) for s in value_chunks)
+
     return field
 
 

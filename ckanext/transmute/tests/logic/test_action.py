@@ -176,9 +176,10 @@ class TestTransmuteAction:
 
         tsm_schema = build_schema(
             {
-                "metadata_created": {"validators": ["tsm_isodate"]},
+                "metadata_created": {
+                    "validators": ["tsm_isodate"]
+                },
                 "metadata_modified": {
-                    "validators": ["tsm_isodate"],
                     "replace_from": "metadata_created",
                 },
             }
