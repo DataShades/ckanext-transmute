@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import contextvars
 from typing import Any, Callable, Optional, Union
 
 import ckan.plugins.toolkit as tk
@@ -16,6 +17,7 @@ from ckanext.transmute.utils import get_transmutator
 
 
 log = logging.getLogger(__name__)
+data_ctx = contextvars.ContextVar('data')
 
 
 @tk.side_effect_free
@@ -36,6 +38,7 @@ def transmute(ctx: dict[str, Any], data_dict: TransmuteData) -> dict[str, Any]:
     tk.check_access("tsm_transmute", ctx, data_dict)
 
     data = data_dict["data"]
+    data_ctx.set(data)
     schema = SchemaParser(data_dict["schema"])
     _transmute_data(data, schema)
 
@@ -121,7 +124,7 @@ def mutate_old_fields(data, definition, root):
                 _transmute_data(nested_field, definition, field.type)
         else:
             data[field.name] = _apply_validators(
-                Field(field.name, value, root), field.validators
+                Field(field.name, value, root, data_ctx.get()), field.validators
             )
 
         if field.map_to:
@@ -158,7 +161,7 @@ def create_new_fields(data, definition, root):
             continue
 
         data[field_name] = _apply_validators(
-            Field(field_name, data[field_name], root), field.validators
+            Field(field_name, data[field_name], root, data_ctx.get()), field.validators
         )
 
 
