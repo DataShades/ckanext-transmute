@@ -2,11 +2,10 @@ from __future__ import annotations
 import logging
 
 import ckan.plugins as p
-from ckan.logic import _import_module_functions
 
 from ckanext.transmute.exception import UnknownTransmutator
 from ckanext.transmute.interfaces import ITransmute
-
+from ckanext.transmute.types import MODE_COMBINE, MODE_FIRST_FILLED
 
 _transmutator_cache = {}
 log = logging.getLogger(__name__)
@@ -109,6 +108,17 @@ def get_json_schema():
                                                     },
                                                     {"type": "string"},
                                                 ]
+                                            },
+                                            "inherit_mode": {
+                                                "type": "string",
+                                                "items": {
+                                                    "oneOf": [
+                                                        {
+                                                            "type": "string",
+                                                            "enum": [MODE_COMBINE, MODE_FIRST_FILLED],
+                                                        }
+                                                    ]
+                                                },
                                             },
                                             "value": {"$ref": "#/$defs/anytype"},
                                             "multiple": {"type": "boolean"},

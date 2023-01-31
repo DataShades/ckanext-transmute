@@ -220,7 +220,7 @@ There is a possibility to provide more arguments to a validator like in `tsm_get
     ```
 4. `remove` (`bool`, default: `False`) - removes a field from a result dict if `True`.
 5. `default` (`Any`) - the default value that will be used if the original field.value evaluates to `False`.
-6. `default_from` (`str`) - acts similar to `default` but accepts a `field.name` of a sibling field from which we want to take its value. Sibling field is a field that located in the same `type`. The current implementation doesn't allow to point on fields from other `types`.
+6. `default_from` (`str` | `list`) - acts similar to `default` but accepts a `field.name` of a sibling field from which we want to take its value. Sibling field is a field that located in the same `type`. The current implementation doesn't allow to point on fields from other `types`. Could take a string that represents the `field.name` or an array of strings, to use multiple fields. See `inherit_mode` keyword for details.
     ```
     ...
     "metadata_modified": {
@@ -229,9 +229,11 @@ There is a possibility to provide more arguments to a validator like in `tsm_get
     },
     ...
     ```
-7. `replace_from` (`str`) - acts similar to `default_from` but replaces the origin value whenever it's empty or not.
-8. `value` (`Any`) - a value that will be used for a field. This keyword has the highest priority. Could be used to create a new field with an arbitrary value.
-9. `update` (`bool`, default: `False) - if the original value is mutable (`array, object`) - you can update it. You can only update field values of the same types.
+7. `replace_from` (`str`| `list`) - acts similar to `default_from` but replaces the origin value whenever it's empty or not.
+8. `inherit_mode` (`str`, default: `combine`) - defines the mode for `default_from` and `replace_from`. By default we are combining values
+from all the fields, but we could just use first non-false value, in case if the field might be empty.
+9. `value` (`Any`) - a value that will be used for a field. This keyword has the highest priority. Could be used to create a new field with an arbitrary value.
+10. `update` (`bool`, default: `False) - if the original value is mutable (`array, object`) - you can update it. You can only update field values of the same types.
 
 ## Installation
 

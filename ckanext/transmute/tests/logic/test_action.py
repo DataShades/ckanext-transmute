@@ -11,6 +11,7 @@ from ckan.logic import ValidationError
 from ckan.tests.helpers import call_action
 
 from ckanext.transmute.tests.helpers import build_schema
+from ckanext.transmute.types import MODE_FIRST_FILLED
 
 
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
@@ -176,9 +177,7 @@ class TestTransmuteAction:
 
         tsm_schema = build_schema(
             {
-                "metadata_created": {
-                    "validators": ["tsm_isodate"]
-                },
+                "metadata_created": {"validators": ["tsm_isodate"]},
                 "metadata_modified": {
                     "replace_from": "metadata_created",
                 },
@@ -723,6 +722,82 @@ class TestTransmuteAction:
             "extras: the origin value has different type"
             in e.value.error_dict["message"]
         )
+
+    def test_transmute_replace_from_inherit_first_filled_first_true(self):
+        """Replace from multiple fields must combine values of those fields"""
+
+        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {
+                    "replace_from": ["field_1", "field_2"],
+                    "inherit_mode": MODE_FIRST_FILLED,
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_3"] == data["field_1"]
+
+    def test_transmute_replace_from_inherit_first_filled_last_true(self):
+        """Replace from multiple fields must combine values of those fields"""
+
+        data = {"field_1": "", "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {
+                    "replace_from": ["field_1", "field_2"],
+                    "inherit_mode": MODE_FIRST_FILLED,
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_3"] == data["field_2"]
+
+    def test_transmute_default_from_inherit_first_filled_last_true(self):
+        """Replace from multiple fields must combine values of those fields"""
+
+        data = {"field_1": "", "field_2": [3, 4, 5], "field_3": ""}
+
+        tsm_schema = build_schema(
+            {
+                "field_1": {},
+                "field_2": {},
+                "field_3": {
+                    "default_from": ["field_1", "field_2"],
+                    "inherit_mode": MODE_FIRST_FILLED,
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["field_3"] == data["field_2"]
+
 
 @pytest.mark.usefixtures("clean_db")
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")

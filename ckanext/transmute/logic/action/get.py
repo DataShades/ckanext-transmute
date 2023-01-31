@@ -9,7 +9,7 @@ import ckan.lib.plugins as lib_plugins
 import ckan.lib.navl.dictization_functions as df
 from ckan.logic import validate, ValidationError
 
-from ckanext.transmute.types import TransmuteData, Field
+from ckanext.transmute.types import TransmuteData, Field, MODE_COMBINE
 from ckanext.transmute.schema import SchemaParser, SchemaField
 from ckanext.transmute.schema import transmute_schema, validate_schema
 from ckanext.transmute.exception import TransmutatorError
@@ -17,7 +17,7 @@ from ckanext.transmute.utils import get_transmutator
 
 
 log = logging.getLogger(__name__)
-data_ctx = contextvars.ContextVar('data')
+data_ctx = contextvars.ContextVar("data")
 
 
 @tk.side_effect_free
@@ -165,26 +165,29 @@ def create_new_fields(data, definition, root):
         )
 
 
-def _default_from(data, field):
+def _default_from(data, field: SchemaField):
     default_from: Union[list[str], str] = field.get_default_from()
-    return _get_external_fields(data, default_from)
+    return _get_external_fields(data, default_from, field)
 
 
-def _replace_from(data, field):
+def _replace_from(data, field: SchemaField):
     replace_from: Union[list[str], str] = field.get_replace_from()
-    return _get_external_fields(data, replace_from)
+    return _get_external_fields(data, replace_from, field)
 
 
-def _get_external_fields(data, external_fields):
+def _get_external_fields(data, external_fields, field: SchemaField):
     if isinstance(external_fields, list):
-        return _combine_from_fields(data, external_fields)
+        if field.inherit_mode == MODE_COMBINE:
+            return _combine_from_fields(data, external_fields)
+        else:
+            return _get_first_filled(data, external_fields)
     return data[external_fields]
 
 
-def _combine_from_fields(data, combine_fields: list[str]):
+def _combine_from_fields(data, external_fields: list[str]):
     value = []
 
-    for field_name in combine_fields:
+    for field_name in external_fields:
         field_value = data[field_name]
 
         if isinstance(field_value, list):
@@ -194,6 +197,15 @@ def _combine_from_fields(data, combine_fields: list[str]):
             value.append(field_value)
 
     return value
+
+
+def _get_first_filled(data, external_fields: list[str]):
+    """Return first not-empty field value"""
+    for field_name in external_fields:
+        field_value = data[field_name]
+
+        if field_value:
+            return field_value
 
 
 def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):

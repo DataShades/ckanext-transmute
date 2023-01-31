@@ -16,3 +16,7 @@ class Field(RecordClass):
     value: Any
     type: str
     data: dict[str, Any]
+
+
+MODE_COMBINE = "combine"
+MODE_FIRST_FILLED = "first-filled"

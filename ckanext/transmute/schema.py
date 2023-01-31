@@ -24,6 +24,7 @@ class SchemaField:
         default_from: Optional[str] = None,
         value: Optional[Any] = None,
         replace_from: Optional[str] = None,
+        inherit_mode: Optional[str] = None,
         update: bool = False,
     ):
         self.name = name
@@ -36,6 +37,7 @@ class SchemaField:
         self.default = default
         self.default_from = default_from
         self.replace_from = replace_from
+        self.inherit_mode = inherit_mode
         self.value = value
         self.update = update
 
@@ -140,6 +142,7 @@ class SchemaParser:
             default_from=field_meta.get("default_from", None),
             value=field_meta.get("value", None),
             replace_from=field_meta.get("replace_from", None),
+            inherit_mode=field_meta.get("inherit_mode", "combine"),
             update=field_meta.get("update", False),
         )
 
