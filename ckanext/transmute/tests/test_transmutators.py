@@ -95,15 +95,14 @@ class TestTransmutators:
             {"field_name": {"validators": [["tsm_trim_string", "0"]]}}
         )
 
-        with pytest.raises(ValidationError) as e:
-            result = call_action(
+        with pytest.raises(ValidationError, match="max_length must be integer"):
+            call_action(
                 "tsm_transmute",
                 data=data,
                 schema=tsm_schema,
                 root="Dataset",
             )
 
-        assert "max_length must be integer" in str(e)
 
     def test_concat_transmutator_with_self(self):
         data: dict[str, Any] = {
@@ -352,3 +351,24 @@ class TestTransmutators:
         )
 
         assert result["field_name"] == []
+
+    @pytest.mark.parametrize("default", [False, 0, "", [], {}, None])
+    def test_default_allows_falsy_values(self, default):
+        """False, 0, "", etc. can be used as a default value"""
+
+        tsm_schema = build_schema(
+            {
+                "field_name": {
+                    "default": default
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result == {"field_name": default}

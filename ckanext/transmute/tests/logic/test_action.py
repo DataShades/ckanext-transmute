@@ -16,6 +16,21 @@ from ckanext.transmute.types import MODE_FIRST_FILLED
 
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
 class TestTransmuteAction:
+    def test_custom_root(self):
+        """Action allows using a root different from "Dataset"
+        """
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema={
+                "root": "custom",
+                "types": {"custom": {"fields": {"def": {"default": "test"}}}}
+            },
+            root="custom",
+        )
+        assert result == {"def": "test"}
+
+
     def test_transmute_default(self):
         """If the origin evaluates to False it must be replaced
         with the default value
@@ -563,7 +578,7 @@ class TestTransmuteAction:
         assert result["metadata_modified"] == result["metadata_created"]
 
     def test_transmute_new_field_from_default_and_value(self):
-        """Default runs before value"""
+        """Default runs after value"""
         data: dict[str, Any] = {}
 
         tsm_schema = build_schema({"field1": {"default": 101, "value": 102}})
@@ -576,7 +591,7 @@ class TestTransmuteAction:
         )
 
         assert "field1" in result
-        assert result["field1"] == 101
+        assert result["field1"] == 102
 
     def test_transmute_new_field_from_value(self):
         """We can define a new field in schema and it will be

@@ -7,6 +7,7 @@ import copy
 from ckan.logic.schema import validator_args
 
 from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
+from ckanext.transmute.utils import SENTINEL
 
 
 class SchemaField:
@@ -20,9 +21,9 @@ class SchemaField:
         validators: Optional[list] = None,
         multiple: bool = False,
         remove: bool = False,
-        default: Optional[Any] = None,
+        default: Any = SENTINEL,
         default_from: Optional[str] = None,
-        value: Optional[Any] = None,
+        value: Any = SENTINEL,
         replace_from: Optional[str] = None,
         inherit_mode: Optional[str] = None,
         update: bool = False,
@@ -138,9 +139,9 @@ class SchemaParser:
             validators=field_meta.get("validators"),
             multiple=field_meta.get("multiple", False),
             remove=field_meta.get("remove", False),
-            default=field_meta.get("default", None),
+            default=field_meta.get("default", SENTINEL),
             default_from=field_meta.get("default_from", None),
-            value=field_meta.get("value", None),
+            value=field_meta.get("value", SENTINEL),
             replace_from=field_meta.get("replace_from", None),
             inherit_mode=field_meta.get("inherit_mode", "combine"),
             update=field_meta.get("update", False),
@@ -148,10 +149,11 @@ class SchemaParser:
 
 
 @validator_args
-def transmute_schema(not_missing):
+def transmute_schema(not_missing, default):
     return {
         "data": [not_missing],
         "schema": [not_missing],
+        "root": [default("Dataset")],
     }
 
 

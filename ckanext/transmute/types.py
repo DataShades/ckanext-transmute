@@ -9,6 +9,7 @@ from recordclass import RecordClass
 class TransmuteData(TypedDict):
     data: dict[str, Any]
     schema: dict[str, Any]
+    root: str
 
 
 class Field(RecordClass):

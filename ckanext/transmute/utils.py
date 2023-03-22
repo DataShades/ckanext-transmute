@@ -7,6 +7,7 @@ from ckanext.transmute.exception import UnknownTransmutator
 from ckanext.transmute.interfaces import ITransmute
 from ckanext.transmute.types import MODE_COMBINE, MODE_FIRST_FILLED
 
+SENTINEL = {}
 _transmutator_cache = {}
 log = logging.getLogger(__name__)
 

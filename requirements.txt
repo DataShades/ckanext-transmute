@@ -1,3 +1,1 @@
 ckanext-scheming~=2.1.0
-typing-extensions
-recordclass
