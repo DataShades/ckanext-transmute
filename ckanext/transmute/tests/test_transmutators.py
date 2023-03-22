@@ -351,3 +351,24 @@ class TestTransmutators:
         )
 
         assert result["field_name"] == []
+
+    @pytest.mark.parametrize("default", [False, 0, "", [], {}, None])
+    def test_default_allows_falsy_values(self, default):
+        """False, 0, "", etc. can be used as a default value"""
+
+        tsm_schema = build_schema(
+            {
+                "field_name": {
+                    "default": default
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result == {"field_name": default}

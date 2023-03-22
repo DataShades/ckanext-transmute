@@ -578,7 +578,7 @@ class TestTransmuteAction:
         assert result["metadata_modified"] == result["metadata_created"]
 
     def test_transmute_new_field_from_default_and_value(self):
-        """Default runs before value"""
+        """Default runs after value"""
         data: dict[str, Any] = {}
 
         tsm_schema = build_schema({"field1": {"default": 101, "value": 102}})
@@ -591,7 +591,7 @@ class TestTransmuteAction:
         )
 
         assert "field1" in result
-        assert result["field1"] == 101
+        assert result["field1"] == 102
 
     def test_transmute_new_field_from_value(self):
         """We can define a new field in schema and it will be

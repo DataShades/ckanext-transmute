@@ -13,7 +13,7 @@ from ckanext.transmute.types import TransmuteData, Field, MODE_COMBINE
 from ckanext.transmute.schema import SchemaParser, SchemaField
 from ckanext.transmute.schema import transmute_schema, validate_schema
 from ckanext.transmute.exception import TransmutatorError
-from ckanext.transmute.utils import get_transmutator
+from ckanext.transmute.utils import get_transmutator, SENTINEL
 
 
 log = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ def mutate_old_fields(data, definition, root):
             data.pop(field_name)
             continue
 
-        if field.default and not value:
+        if field.default is not SENTINEL and not value:
             data[field.name] = value = field.default
 
         if field.default_from and not value:
@@ -101,7 +101,7 @@ def mutate_old_fields(data, definition, root):
         if field.replace_from:
             data[field.name] = value = _replace_from(data, field)
 
-        if field.value:
+        if field.value is not SENTINEL:
             if field.update:
                 if not isinstance(data[field.name], type(field.value)):
                     raise ValidationError(
@@ -148,8 +148,10 @@ def create_new_fields(data, definition, root):
         if field_name in data:
             continue
 
-        if field.default or field.value:
-            data[field_name] = field.default or field.value
+        if field.value is not SENTINEL:
+            data[field_name] = field.value
+        elif field.default is not SENTINEL:
+            data[field_name] = field.default
 
         if field.default_from:
             data[field_name] = _default_from(data, field)
