@@ -95,15 +95,14 @@ class TestTransmutators:
             {"field_name": {"validators": [["tsm_trim_string", "0"]]}}
         )
 
-        with pytest.raises(ValidationError) as e:
-            result = call_action(
+        with pytest.raises(ValidationError, match="max_length must be integer"):
+            call_action(
                 "tsm_transmute",
                 data=data,
                 schema=tsm_schema,
                 root="Dataset",
             )
 
-        assert "max_length must be integer" in str(e)
 
     def test_concat_transmutator_with_self(self):
         data: dict[str, Any] = {
