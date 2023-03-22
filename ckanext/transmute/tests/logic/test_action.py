@@ -16,6 +16,21 @@ from ckanext.transmute.types import MODE_FIRST_FILLED
 
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
 class TestTransmuteAction:
+    def test_custom_root(self):
+        """Action allows using a root different from "Dataset"
+        """
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema={
+                "root": "custom",
+                "types": {"custom": {"fields": {"def": {"default": "test"}}}}
+            },
+            root="custom",
+        )
+        assert result == {"def": "test"}
+
+
     def test_transmute_default(self):
         """If the origin evaluates to False it must be replaced
         with the default value

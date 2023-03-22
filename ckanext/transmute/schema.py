@@ -148,10 +148,11 @@ class SchemaParser:
 
 
 @validator_args
-def transmute_schema(not_missing):
+def transmute_schema(not_missing, default):
     return {
         "data": [not_missing],
         "schema": [not_missing],
+        "root": [default("Dataset")],
     }
 
 

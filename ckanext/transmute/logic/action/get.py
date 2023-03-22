@@ -31,6 +31,7 @@ def transmute(ctx: dict[str, Any], data_dict: TransmuteData) -> dict[str, Any]:
         ctx: CKAN context dict
         data: A data dict to transmute
         schema: schema to transmute data
+        root: a root schema type
 
     Returns:
         Transmuted data dict
@@ -40,19 +41,18 @@ def transmute(ctx: dict[str, Any], data_dict: TransmuteData) -> dict[str, Any]:
     data = data_dict["data"]
     data_ctx.set(data)
     schema = SchemaParser(data_dict["schema"])
-    _transmute_data(data, schema)
+    _transmute_data(data, schema, data_dict["root"])
 
     return data
 
 
-def _transmute_data(data, definition, root="Dataset"):
+def _transmute_data(data, definition, root):
     """Mutates an actual data in `data` dict
 
     Args:
         data (dict: [str, Any]): a data to mutate
         definition (SchemaParser): SchemaParser object
         root (str): a root schema type
-                    the default root is Dataset
     """
 
     schema = definition.types[root]
