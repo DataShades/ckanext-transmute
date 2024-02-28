@@ -192,10 +192,13 @@ schema = ...
 - `tsm_unique_only` - Preserve only unique values from a list. Works only with lists.
 
 
-
 The default transmutator must receive at least one mandatory argument - `field` object. Field contains few properties: `field_name`, `value` and `type`.
 
 There is a possibility to provide more arguments to a validator like in `tsm_get_nested`. For this use a nested array with first item transmutator and other - arguments to it.
+
+- `tsm_mapper` - Map current value to the mapping dict
+
+Map a value to another value. The current value must serve as a key within the mapping dictionary, while the new value will represent the updated value
 
 ### Keywords
 1. `map_to` (`str`) - changes the `field.name` in result dict.

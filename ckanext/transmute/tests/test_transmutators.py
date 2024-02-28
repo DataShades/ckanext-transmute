@@ -103,7 +103,6 @@ class TestTransmutators:
                 root="Dataset",
             )
 
-
     def test_concat_transmutator_with_self(self):
         data: dict[str, Any] = {
             "identifier": "right-to-the-night-results",
@@ -287,9 +286,7 @@ class TestTransmutators:
         )
 
         for res in result["resources"]:
-            assert (
-                res["title"] == f"{result['title']} {res['format'].upper()}"
-            )
+            assert res["title"] == f"{result['title']} {res['format'].upper()}"
 
     def test_unique_only(self):
         """You can skip using $self if you want for some reason"""
@@ -358,9 +355,7 @@ class TestTransmutators:
 
         tsm_schema = build_schema(
             {
-                "field_name": {
-                    "default": default
-                },
+                "field_name": {"default": default},
             }
         )
 
@@ -372,3 +367,71 @@ class TestTransmutators:
         )
 
         assert result == {"field_name": default}
+
+    def test_mapper_with_mapped_value(self):
+        data: dict[str, Any] = {"language": "eng"}
+
+        tsm_schema = build_schema(
+            {
+                "language": {
+                    "validators": [
+                        ["tsm_mapper", {"eng": "English"}, "Spanish"],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["language"] == "English"
+
+
+    def test_mapper_without_mapped_value(self):
+        data: dict[str, Any] = {"language": "ua"}
+
+        tsm_schema = build_schema(
+            {
+                "language": {
+                    "validators": [
+                        ["tsm_mapper", {"eng": "English"}, "Spanish"],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["language"] == "Spanish"
+
+    def test_mapper_without_default(self):
+        data: dict[str, Any] = {"language": "ua"}
+
+        tsm_schema = build_schema(
+            {
+                "language": {
+                    "validators": [
+                        ["tsm_mapper", {"eng": "English"}],
+                    ],
+                },
+            }
+        )
+
+        with pytest.raises(TransmutatorError) as e:
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert e.value.error == "mapper() missing 1 required positional argument: 'default'"

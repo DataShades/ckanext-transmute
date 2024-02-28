@@ -216,3 +216,25 @@ def unique_only(field: Field) -> Field:
         raise df.Invalid(tk._("Field value must be an array"))
     field.value = list(set(field.value))
     return field
+
+
+@transmutator
+def mapper(field: Field, mapping: dict[Any, Any], default: Any) -> Field:
+    """Map a value with a new value. The initial value must serve as a key within
+    a mapping dictionary, while the dic value will represent the updated value.
+
+    In cases where the key does not exist within the mapping, a default value will be employed.
+
+    Args:
+        field (Field): Field object
+        mapping (dict[Any, Any]): A dictionary representing the mapping of values.
+        default (Any): The default value to be used when the key is not found in the mapping.
+
+    Returns:
+        Field: the same Field with new value
+    """
+    new_value = mapping.get(field.value, default)
+
+    field.value = new_value
+
+    return field
