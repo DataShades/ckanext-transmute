@@ -1,12 +1,14 @@
 # ckanext-transmute
-The extension helps to validate and converts a dataset based on a specific schema.
+This extension helps to validate and convert data based on a specific schema.
 
 ## Working with transmute
 
-`ckanext-transmute` provides an action `tsm_transmute` It helps us to transmute data with the provided convertion scheme. The action doesn't change the original data, but creates a new data dict. There are two mandatory arguments - `data` and `schema`. `data` is a data dict you have and `schema` helps you to validate/change data in it.
+`ckanext-transmute` provides an action `tsm_transmute`. It helps us to transmute data with the provided conversion scheme. The action doesn't change the original data but creates a new data dict. There are two mandatory arguments: `data` and `schema`. `data` is a data dict you have, and `schema` helps you to validate/change data in it.
 
-Example:
+### Example
+
 We have a data dict:
+
 ```
 {
             "title": "Test-dataset",
@@ -35,7 +37,9 @@ We have a data dict:
             ],
         }
 ```
+
 And we want to achieve this:
+
 ```
 {
             "name": "test-dataset",
@@ -58,7 +62,9 @@ And we want to achieve this:
             ],
         }
 ```
+
 Then, our schema must be something like that:
+
 ```
 {
         "root": "Dataset",
@@ -135,13 +141,14 @@ There is an example of schema with nested types. The `root` field is mandatory, 
 
 ### Transmutators
 
-There are few default transmutators you can use in your schema. Of course, you can define a custom transmutator with the `ITransmute` interface.
-- `tsm_name_validator` - Wrapper over CKAN default `name_validator` validator
-- `tsm_to_lowercase` - Casts string value to a lowercase
-- `tsm_to_uppercase` - Casts string value to a uppercase
-- `tsm_string_only` - Validates if `field.value` is string
-- `tsm_isodate` - Validates datetime string. Mutates an iso-like string to datetime object
-- `tsm_to_string` - Casts a `field.value` to `str`
+There are a few default transmutators you can use in your schema. Of course, you can define a custom transmutator with the `ITransmute ` interface.
+
+- `tsm_name_validator` - Wrapper over CKAN default `name_validator` validator.
+- `tsm_to_lowercase` - Casts string value to lowercase.
+- `tsm_to_uppercase` - Casts string value to uppercase.
+- `tsm_string_only` - Validates if `field.value` is a string.
+- `tsm_isodate` - Validates datetime string. Mutates an iso-like string to datetime object.
+- `tsm_to_string` - Casts a `field.value` to `str`.
 - `tsm_get_nested` - Allows you to pick up a value from a nested structure. Example:
 ```
 data = "title_translated": [
@@ -160,7 +167,7 @@ schema = ...
 ```
 This will take a value for a `title` field from `title_translated` field. Because `title_translated` is an array with nested objects, we are using the `tsm_get_nested` transmutator to achieve the value from it.
 
-- `tsm_trim_string` - Trim string with max lenght. Example to trim `hello world` to `hello`:
+- `tsm_trim_string` - Trim string with max length. Example to trim `hello world` to `hello`:
 ```
 data = {"field_name": "hello world}
 
@@ -172,7 +179,7 @@ schema = ...
     },
     ...
 ```
-- `tsm_concat` - Trim string with max lenght. Use `$self` to point on field value. Example:
+- `tsm_concat` - Concatenate strings. Use `$self` to point on field value. Example:
 ```
 data = {"id": "dataset-1"}
 
@@ -239,7 +246,7 @@ schema = ...
     },
     ...
     ```
-4. `remove` (`bool`, default: `False`) - removes a field from a result dict if `True`.
+4. `remove` (`bool`, default: `False`) - Removes a field from a result dict if `True`.
 5. `default` (`Any`) - the default value that will be used if the original field.value evaluates to `False`.
 6. `default_from` (`str` | `list`) - acts similar to `default` but accepts a `field.name` of a sibling field from which we want to take its value. Sibling field is a field that located in the same `type`. The current implementation doesn't allow to point on fields from other `types`. Could take a string that represents the `field.name` or an array of strings, to use multiple fields. See `inherit_mode` keyword for details.
     ```
@@ -254,7 +261,7 @@ schema = ...
 8. `inherit_mode` (`str`, default: `combine`) - defines the mode for `default_from` and `replace_from`. By default we are combining values
 from all the fields, but we could just use first non-false value, in case if the field might be empty.
 9. `value` (`Any`) - a value that will be used for a field. This keyword has the highest priority. Could be used to create a new field with an arbitrary value.
-10. `update` (`bool`, default: `False) - if the original value is mutable (`array, object`) - you can update it. You can only update field values of the same types.
+10. `update` (`bool`, default: `False`) - if the original value is mutable (`array`, `object`) - you can update it. You can only update field values of the same types.
 
 ## Installation
 
