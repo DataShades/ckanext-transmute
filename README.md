@@ -11,7 +11,7 @@ This extension helps to validate and convert data based on a specific schema.
 
 We have a data dict:
 
-```
+```json
 {
             "title": "Test-dataset",
             "email": "test@test.ua",
@@ -42,7 +42,7 @@ We have a data dict:
 
 And we want to achieve this:
 
-```
+```py
 {
             "name": "test-dataset",
             "email": "test@test.ua",
@@ -152,7 +152,7 @@ There are a few default transmutators you can use in your schema. Of course, you
 - `tsm_isodate` - Validates datetime string. Mutates an iso-like string to datetime object.
 - `tsm_to_string` - Casts a `field.value` to `str`.
 - `tsm_get_nested` - Allows you to pick up a value from a nested structure. Example:
-```
+```py
 data = "title_translated": [
     {"nested_field": {"en": "en title", "ar": "العنوان ar"}},
 ]
@@ -170,7 +170,7 @@ schema = ...
 This will take a value for a `title` field from `title_translated` field. Because `title_translated` is an array with nested objects, we are using the `tsm_get_nested` transmutator to achieve the value from it.
 
 - `tsm_trim_string` - Trim string with max length. Example to trim `hello world` to `hello`:
-```
+```py
 data = {"field_name": "hello world}
 
 schema = ...
@@ -182,7 +182,7 @@ schema = ...
     ...
 ```
 - `tsm_concat` - Concatenate strings. Use `$self` to point on field value. Example:
-```
+```py
 data = {"id": "dataset-1"}
 
 schema = ...
@@ -211,8 +211,30 @@ Map a value to another value. The current value must serve as a key within the m
 
 The default value to be used when the key is not found in the mapping. If the default value is not provided, the current value will be used as it.
 
-```
+```py
 data = {"language": "English"}
+
+schema = ...
+    "language": {
+        "validators": [
+            [
+                "tsm_mapper",
+                {"English": "eng"},
+                "English",
+            ]
+        ],
+    },
+    ...
+```
+
+- `tsm_list_mapper` - Map current value to the mapping dict
+
+Works as `tsm_mapper` but with list. Doesn't have a `default` value. Third argument `remove` must be `True` or `False`.
+
+If `remove` set to True, removes values from the list if they don't have a corresponding mapping. Defaults to `False`.
+
+```py
+data = {"topic": ["Health", "Military", "Utilities"]}
 
 schema = ...
     "language": {

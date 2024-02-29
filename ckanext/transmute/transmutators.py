@@ -219,7 +219,9 @@ def unique_only(field: Field) -> Field:
 
 
 @transmutator
-def mapper(field: Field, mapping: dict[Any, Any], default: Optional[Any] = None) -> Field:
+def mapper(
+    field: Field, mapping: dict[Any, Any], default: Optional[Any] = None
+) -> Field:
     """Map a value with a new value. The initial value must serve as a key within
     a mapping dictionary, while the dict value will represent the updated value.
 
@@ -235,5 +237,38 @@ def mapper(field: Field, mapping: dict[Any, Any], default: Optional[Any] = None)
     new_value = mapping.get(field.value, default or field.value)
 
     field.value = new_value
+
+    return field
+
+
+@transmutator
+def list_mapper(
+    field: Field,
+    mapping: dict[Any, Any],
+    remove: Optional[bool] = False,
+) -> Field:
+    """
+    Maps values within a list to their corresponding values in a provided mapping dictionary.
+
+    Args:
+        field (Field): Field object
+        mapping (dict[Any, Any]): A dictionary representing the mapping of values.
+        remove (bool, optional): If set to True, removes values from the list if
+            they don't have a corresponding mapping. Defaults to False.
+    """
+    if not isinstance(field.value, list):
+        return field
+
+    result = []
+
+    for value in field.value:
+        map_value = mapping.get(value)
+
+        if not map_value and remove:
+            continue
+
+        result.append(map_value or value)
+
+    field.value = result
 
     return field

@@ -33,6 +33,28 @@ class TestTransmutators:
 
         assert e.value.error == "Arguments for validator weren't provided"
 
+    @pytest.mark.parametrize("default", [False, 0, "", [], {}, None])
+    def test_default_allows_falsy_values(self, default):
+        """False, 0, "", etc. can be used as a default value"""
+
+        tsm_schema = build_schema(
+            {
+                "field_name": {"default": default},
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result == {"field_name": default}
+
+
+@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+class TestTrimStringTransmutator:
     def test_trim_string_transmutator(self):
         data: dict[str, Any] = {
             "field_name": "hello world",
@@ -103,6 +125,9 @@ class TestTransmutators:
                 root="Dataset",
             )
 
+
+@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+class TestConcatTransmutator:
     def test_concat_transmutator_with_self(self):
         data: dict[str, Any] = {
             "identifier": "right-to-the-night-results",
@@ -288,6 +313,9 @@ class TestTransmutators:
         for res in result["resources"]:
             assert res["title"] == f"{result['title']} {res['format'].upper()}"
 
+
+@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+class TestUniqueOnlyTransmutator:
     def test_unique_only(self):
         """You can skip using $self if you want for some reason"""
         data: dict[str, Any] = {"field_name": [1, 2, 3, 3, 4, 5, 6, 6]}
@@ -348,25 +376,6 @@ class TestTransmutators:
         )
 
         assert result["field_name"] == []
-
-    @pytest.mark.parametrize("default", [False, 0, "", [], {}, None])
-    def test_default_allows_falsy_values(self, default):
-        """False, 0, "", etc. can be used as a default value"""
-
-        tsm_schema = build_schema(
-            {
-                "field_name": {"default": default},
-            }
-        )
-
-        result = call_action(
-            "tsm_transmute",
-            data={},
-            schema=tsm_schema,
-            root="Dataset",
-        )
-
-        assert result == {"field_name": default}
 
 
 @pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
@@ -459,3 +468,78 @@ class TestMapperTransmutator:
         )
 
         assert result["language"] == "ua"
+
+
+@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+class TestListMapperTransmutator:
+    def test_list_mapper_with_mapped_value(self):
+        data: dict[str, Any] = {"topic": ["Health", "Military", "Utilities"]}
+
+        tsm_schema = build_schema(
+            {
+                "topic": {
+                    "validators": [
+                        [
+                            "tsm_list_mapper",
+                            {"Military": "Army", "Utilities": "Utility"},
+                        ],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["topic"] == ["Health", "Army", "Utility"]
+
+    def test_list_mapper_with_remove(self):
+        data: dict[str, Any] = {"topic": ["Health", "Military", "Utilities"]}
+
+        tsm_schema = build_schema(
+            {
+                "topic": {
+                    "validators": [
+                        [
+                            "tsm_list_mapper",
+                            {"Military": "Army", "Utilities": "Utility"},
+                            True,
+                        ],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["topic"] == ["Army", "Utility"]
+
+    def test_list_mapper_without_mapping(self):
+        data: dict[str, Any] = {"topic": ["Health", "Military", "Utilities"]}
+
+        tsm_schema = build_schema(
+            {
+                "topic": {
+                    "validators": [["tsm_list_mapper"]],
+                }
+            }
+        )
+
+        with pytest.raises(TransmutatorError) as e:
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+        assert e.value.error == "Arguments for validator weren't provided"
