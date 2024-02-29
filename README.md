@@ -1,3 +1,5 @@
+[![Tests](https://github.com/mutantsan/ckanext-transmute/actions/workflows/test.yml/badge.svg)](https://github.com/mutantsan/ckanext-transmute/actions/workflows/test.yml)
+
 # ckanext-transmute
 This extension helps to validate and convert data based on a specific schema.
 
