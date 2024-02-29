@@ -174,7 +174,7 @@ schema = ...
 ```
 - `tsm_concat` - Trim string with max lenght. Use `$self` to point on field value. Example:
 ```
-data = {"id": "dataset-1}
+data = {"id": "dataset-1"}
 
 schema = ...
     "package_url": {
@@ -198,7 +198,25 @@ There is a possibility to provide more arguments to a validator like in `tsm_get
 
 - `tsm_mapper` - Map current value to the mapping dict
 
-Map a value to another value. The current value must serve as a key within the mapping dictionary, while the new value will represent the updated value
+Map a value to another value. The current value must serve as a key within the mapping dictionary, while the new value will represent the updated value.
+
+The default value to be used when the key is not found in the mapping. If the default value is not provided, the current value will be used as it.
+
+```
+data = {"language": "English"}
+
+schema = ...
+    "language": {
+        "validators": [
+            [
+                "tsm_mapper",
+                {"English": "eng"},
+                "English",
+            ]
+        ],
+    },
+    ...
+```
 
 ### Keywords
 1. `map_to` (`str`) - changes the `field.name` in result dict.

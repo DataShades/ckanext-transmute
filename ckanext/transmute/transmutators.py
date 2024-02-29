@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 from datetime import datetime
 
 from dateutil.parser import parse, ParserError
@@ -219,21 +219,20 @@ def unique_only(field: Field) -> Field:
 
 
 @transmutator
-def mapper(field: Field, mapping: dict[Any, Any], default: Any) -> Field:
+def mapper(field: Field, mapping: dict[Any, Any], default: Optional[Any] = None) -> Field:
     """Map a value with a new value. The initial value must serve as a key within
-    a mapping dictionary, while the dic value will represent the updated value.
-
-    In cases where the key does not exist within the mapping, a default value will be employed.
+    a mapping dictionary, while the dict value will represent the updated value.
 
     Args:
         field (Field): Field object
         mapping (dict[Any, Any]): A dictionary representing the mapping of values.
         default (Any): The default value to be used when the key is not found in the mapping.
+            If the default value is not provided, the current value will be used as it.
 
     Returns:
         Field: the same Field with new value
     """
-    new_value = mapping.get(field.value, default)
+    new_value = mapping.get(field.value, default or field.value)
 
     field.value = new_value
 

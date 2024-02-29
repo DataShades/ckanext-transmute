@@ -368,6 +368,9 @@ class TestTransmutators:
 
         assert result == {"field_name": default}
 
+
+@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+class TestMapperTransmutator:
     def test_mapper_with_mapped_value(self):
         data: dict[str, Any] = {"language": "eng"}
 
@@ -389,7 +392,6 @@ class TestTransmutators:
         )
 
         assert result["language"] == "English"
-
 
     def test_mapper_without_mapped_value(self):
         data: dict[str, Any] = {"language": "ua"}
@@ -413,14 +415,14 @@ class TestTransmutators:
 
         assert result["language"] == "Spanish"
 
-    def test_mapper_without_default(self):
+    def test_mapper_without_mapping(self):
         data: dict[str, Any] = {"language": "ua"}
 
         tsm_schema = build_schema(
             {
                 "language": {
                     "validators": [
-                        ["tsm_mapper", {"eng": "English"}],
+                        ["tsm_mapper"],
                     ],
                 },
             }
@@ -434,4 +436,26 @@ class TestTransmutators:
                 root="Dataset",
             )
 
-        assert e.value.error == "mapper() missing 1 required positional argument: 'default'"
+        assert e.value.error == "Arguments for validator weren't provided"
+
+    def test_mapper_without_default(self):
+        data: dict[str, Any] = {"language": "ua"}
+
+        tsm_schema = build_schema(
+            {
+                "language": {
+                    "validators": [
+                        ["tsm_mapper", {"eng": "English"}],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["language"] == "ua"
