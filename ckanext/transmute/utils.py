@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import logging
+from typing import Any, Callable
 
 import ckan.plugins as p
 
@@ -9,10 +11,23 @@ from ckanext.transmute.types import MODE_COMBINE, MODE_FIRST_FILLED
 
 SENTINEL = {}
 _transmutator_cache = {}
+_schema_cache = {}
+
 log = logging.getLogger(__name__)
 
 
-def get_transmutator(transmutator: str):
+def get_schema(name: str) -> dict[str, Any] | None:
+    """Return named schema."""
+    return _schema_cache.get(name)
+
+
+def collect_schemas():
+    """Collect named schemas from ITransmute plugins."""
+    for plugin in reversed(list(p.PluginImplementations(ITransmute))):
+        _schema_cache.update(plugin.get_transmutation_schemas())
+
+
+def get_transmutator(transmutator: str) -> Callable[..., Any]:
     get_all_transmutators()
 
     try:
@@ -33,7 +48,7 @@ def get_all_transmutators() -> list[str]:
     return list(_transmutator_cache.keys())
 
 
-def get_json_schema():
+def get_json_schema() -> dict[str, Any]:
     transmutators = get_all_transmutators()
     return {
         "$schema": "http://json-schema.org/draft-04/schema",
@@ -116,7 +131,10 @@ def get_json_schema():
                                                     "oneOf": [
                                                         {
                                                             "type": "string",
-                                                            "enum": [MODE_COMBINE, MODE_FIRST_FILLED],
+                                                            "enum": [
+                                                                MODE_COMBINE,
+                                                                MODE_FIRST_FILLED,
+                                                            ],
                                                         }
                                                     ]
                                                 },

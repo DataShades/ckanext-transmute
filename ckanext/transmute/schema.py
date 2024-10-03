@@ -98,7 +98,7 @@ class SchemaParser:
         if not root_type:
             raise SchemaParsingError("Schema: root type is missing")
 
-        if not root_type in self.schema.get("types"):
+        if not root_type in self.schema.get("types", []):
             raise SchemaParsingError("Schema: root_type is declared but not defined")
 
         return root_type
