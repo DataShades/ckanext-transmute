@@ -250,7 +250,7 @@ schema = ...
 ```
 
 ### Keywords
-1. `map_to` (`str`) - changes the `field.name` in result dict.
+1. `map` (`str`) - changes the `field.name` in result dict.
 2. `validators` (`list[str]`) - a list of transmutators that will be applied to a `field.value`. A transmutator could be a `string` or a `list` where the first item must be transmutator name and others are arbitrary values. Example:
     ```
     ...

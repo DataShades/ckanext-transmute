@@ -60,37 +60,31 @@ def _transmute_data(data, definition, root):
     if not schema:
         return
 
-    mutate_old_fields(data, definition, root)
-    create_new_fields(data, definition, root)
+    mutate_fields(data, definition, root)
 
 
-def mutate_old_fields(data, definition, root):
-    """Checks all of the data fields and mutate them
-    according to the provided schema
+def _weighten_fields(pair: tuple[str, SchemaField]):
+    return pair[1].weight
 
-    New fields won't be created here, because we are
-    only traversing the data dictionary
 
-    We can't traverse only Data or only Schema, because
-    otherwise, the user will have to define all of the fields
-    that could exist in data
+def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
+    """Checks all of the schema fields and mutate/create them according to the
+    provided schema.
 
     Args:
         data (dict: [str, Any]): a data to mutate
         definition (SchemaParser): SchemaParser object
         root (str): a root schema type
+
     """
     schema = definition.types[root]
 
-    for field_name, value in data.copy().items():
-        field: SchemaField = schema["fields"].get(field_name)
-
-        if not field:
-            continue
-
+    for field_name, field in sorted(schema["fields"].items(), key=_weighten_fields):
         if field.remove:
-            data.pop(field_name)
+            data.pop(field_name, None)
             continue
+
+        value = data.get(field_name)
 
         if field.default is not SENTINEL and not value:
             data[field.name] = value = field.default
@@ -120,51 +114,19 @@ def mutate_old_fields(data, definition, root):
                 data[field.name] = value = field.value
 
         if field.is_multiple():
-            for nested_field in value:
+            for nested_field in value or []:
                 _transmute_data(nested_field, definition, field.type)
+
         else:
+            if field_name not in data and not field.validate_missing:
+                continue
+
             data[field.name] = _apply_validators(
                 Field(field.name, value, root, data_ctx.get()), field.validators
             )
 
-        if field.map_to:
-            data[field.map_to] = data.pop(field.name)
-
-
-def create_new_fields(data, definition, root):
-    """New fields are going to be created according
-    to the provided schema
-
-    If the defined field is not exist in the data dict
-    we are going to create it
-
-    The newly created field's value could be inherited from
-    an existing field. This field must be defined in the
-    schema.
-    """
-    schema = definition.types[root]
-
-    for field_name, field in schema["fields"].items():
-        if field_name in data:
-            continue
-
-        if field.value is not SENTINEL:
-            data[field_name] = field.value
-        elif field.default is not SENTINEL:
-            data[field_name] = field.default
-
-        if field.default_from:
-            data[field_name] = _default_from(data, field)
-
-        if field.replace_from:
-            data[field_name] = _replace_from(data, field)
-
-        if field_name not in data:
-            continue
-
-        data[field_name] = _apply_validators(
-            Field(field_name, data[field_name], root, data_ctx.get()), field.validators
-        )
+        if field.map:
+            data[field.map] = data.pop(field.name, None)
 
 
 def _default_from(data, field: SchemaField):
@@ -210,7 +172,7 @@ def _get_first_filled(data, external_fields: list[str]):
             return field_value
 
 
-def _apply_validators(field: Field, validators: list[Callable[[Field], Any]]):
+def _apply_validators(field: Field, validators: list[str | list[str]]):
     """Applies validators sequentially to the field value
 
     Args:

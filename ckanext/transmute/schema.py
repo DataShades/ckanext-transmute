@@ -3,48 +3,35 @@ from __future__ import annotations
 from typing import Any, Optional, Union
 
 import copy
+import dataclasses
 
 from ckan.logic.schema import validator_args
-
+from ckan import types
 from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
 from ckanext.transmute.utils import SENTINEL
 
 
+@dataclasses.dataclass
 class SchemaField:
-    def __init__(
-        self,
-        *,
-        name: str,
-        type_: str,
-        definition: dict,
-        map_to: Optional[str] = None,
-        validators: Optional[list] = None,
-        multiple: bool = False,
-        remove: bool = False,
-        default: Any = SENTINEL,
-        default_from: Optional[str] = None,
-        value: Any = SENTINEL,
-        replace_from: Optional[str] = None,
-        inherit_mode: Optional[str] = None,
-        update: bool = False,
-    ):
-        self.name = name
-        self.type = type_
-        self.definition = definition
-        self.map_to = map_to
-        self.validators = validators or []
-        self.multiple = multiple
-        self.remove = remove
-        self.default = default
-        self.default_from = default_from
-        self.replace_from = replace_from
-        self.inherit_mode = inherit_mode
-        self.value = value
-        self.update = update
+    name: str
+    type: str
+    definition: dict[str, Any]
+    map: Optional[str] = None
+    validators: list[Any] = dataclasses.field(default_factory=list)
+    multiple: bool = False
+    remove: bool = False
+    default: Any = SENTINEL
+    default_from: Optional[str] = None
+    value: Any = SENTINEL
+    replace_from: Optional[str] = None
+    inherit_mode: Optional[str] = "combine"
+    update: bool = False
+    validate_missing: bool = False
+    weight: int = 0
 
     def __repr__(self):
         return (
-            f"<Field name={self.name} map_to={self.map_to}"
+            f"<Field name={self.name} map={self.map}"
             f" type={self.type} multiple={self.multiple}"
             f" validators={self.validators}>"
         )
@@ -86,14 +73,14 @@ class SchemaField:
 
 
 class SchemaParser:
-    def __init__(self, schema):
+    def __init__(self, schema: dict[str, Any]):
         self.schema = copy.deepcopy(schema)
         self.root_type = self.get_root_type()
         self.types = self.parse_types()
         self.parse_fields()
 
     def get_root_type(self):
-        root_type: str = self.schema.get("root")
+        root_type: str = self.schema.get("root", "")
 
         if not root_type:
             raise SchemaParsingError("Schema: root type is missing")
@@ -117,7 +104,7 @@ class SchemaParser:
                 )
 
     def _parse_field(
-        self, field_name: str, field_meta: dict, _type: str
+        self, field_name: str, field_meta: dict[str, Any], _type: str
     ) -> SchemaField:
         """Create a SchemaField combining all the
         information about field
@@ -131,25 +118,15 @@ class SchemaParser:
             SchemaField: SchemaField object
         """
 
-        return SchemaField(
-            name=field_name,
-            type_=field_meta.get("type", _type),
-            definition=self.types[_type],
-            map_to=field_meta.get("map", None),
-            validators=field_meta.get("validators"),
-            multiple=field_meta.get("multiple", False),
-            remove=field_meta.get("remove", False),
-            default=field_meta.get("default", SENTINEL),
-            default_from=field_meta.get("default_from", None),
-            value=field_meta.get("value", SENTINEL),
-            replace_from=field_meta.get("replace_from", None),
-            inherit_mode=field_meta.get("inherit_mode", "combine"),
-            update=field_meta.get("update", False),
-        )
+        params: dict[str, Any] = dict({"type": _type}, **field_meta)
+        return SchemaField(name=field_name, definition=self.types[_type], **params)
 
 
 @validator_args
-def transmute_schema(not_missing, default):
+def transmute_schema(
+    not_missing: types.Validator,
+    default: types.ValidatorFactory,
+) -> types.Schema:
     return {
         "data": [not_missing],
         "schema": [not_missing],
@@ -158,7 +135,7 @@ def transmute_schema(not_missing, default):
 
 
 @validator_args
-def validate_schema(not_missing):
+def validate_schema(not_missing: types.Validator) -> types.Schema:
     return {
         "data": [not_missing],
     }

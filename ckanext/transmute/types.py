@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import dataclasses
 from typing import Any
 from typing_extensions import TypedDict
-
-from recordclass import RecordClass
 
 
 class TransmuteData(TypedDict):
@@ -12,7 +11,8 @@ class TransmuteData(TypedDict):
     root: str
 
 
-class Field(RecordClass):
+@dataclasses.dataclass
+class Field:
     field_name: str
     value: Any
     type: str

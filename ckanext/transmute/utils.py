@@ -9,7 +9,7 @@ from ckanext.transmute.exception import UnknownTransmutator
 from ckanext.transmute.interfaces import ITransmute
 from ckanext.transmute.types import MODE_COMBINE, MODE_FIRST_FILLED
 
-SENTINEL = {}
+SENTINEL = object()
 _transmutator_cache = {}
 _schema_cache = {}
 
