@@ -206,6 +206,8 @@ def _apply_validators(field: Field, validators: list[str | list[str]]):
                 field = get_transmutator(validator[0])(field, *validator[1:])
             else:
                 field = get_transmutator(validator)(field)
+    except df.StopOnError:
+        return field.value
     except df.Invalid as e:
         raise ValidationError({f"{field.type}:{field.field_name}": [e.error]})
     except TypeError as e:

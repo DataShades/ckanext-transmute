@@ -128,6 +128,22 @@ def to_string(field: Field) -> Field:
 
 
 @transmutator
+def stop_on_empty(field: Field) -> Field:
+    """Stop transmutation if field is empty
+
+    Args:
+        field (Field): Field object
+
+    Returns:
+        Field: the same Field
+    """
+    if not field.value:
+        raise df.StopOnError
+
+    return field
+
+
+@transmutator
 def get_nested(field: Field, *path) -> Field:
     """Fetches a nested value from a field
 
