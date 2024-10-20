@@ -79,7 +79,11 @@ def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
     """
     schema = definition.types[root]
 
+    known_fields: set[str] = set()
+
     for field_name, field in sorted(schema["fields"].items(), key=_weighten_fields):
+        known_fields.add(field_name)
+
         if field.remove:
             data.pop(field_name, None)
             continue
@@ -126,7 +130,13 @@ def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
             )
 
         if field.map:
+            known_fields.add(field.map)
             data[field.map] = data.pop(field.name, None)
+
+    if schema.get("drop_unknown_fields"):
+        for name in list(data):
+            if name not in known_fields:
+                del data[name]
 
 
 def _default_from(data, field: SchemaField):
