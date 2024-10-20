@@ -90,14 +90,15 @@ def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
 
         value = data.get(field_name)
 
-        if field.default is not SENTINEL and not value:
-            data[field.name] = value = field.default
-
         if field.default_from and not value:
             data[field.name] = value = _default_from(data, field)
 
         if field.replace_from:
             data[field.name] = value = _replace_from(data, field)
+
+        # set static default **after** attempt to get default from the other field
+        if field.default is not SENTINEL and not value:
+            data[field.name] = value = field.default
 
         if field.value is not SENTINEL:
             if field.update:
