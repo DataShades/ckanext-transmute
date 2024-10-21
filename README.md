@@ -220,9 +220,9 @@ schema = ...
             [
                 "tsm_mapper",
                 {"English": "eng"},
-                "English",
+                "English"
             ]
-        ],
+        ]
     },
     ...
 ```
@@ -233,21 +233,44 @@ Works as `tsm_mapper` but with list. Doesn't have a `default` value. Third argum
 
 If `remove` set to True, removes values from the list if they don't have a corresponding mapping. Defaults to `False`.
 
+Example without `remove`:
+
 ```py
 data = {"topic": ["Health", "Military", "Utilities"]}
 
 schema = ...
-    "language": {
+    "topic": {
         "validators": [
             [
-                "tsm_mapper",
-                {"English": "eng"},
-                "English",
+                "tsm_list_mapper",
+                {"Military": "Army", "Utilities": "Utility"}
             ]
-        ],
+        ]
     },
     ...
 ```
+
+The result here will be `["Health", "Army", "Utility"]`
+And here's an example with remove:
+
+```py
+data: dict[str, Any] = {"topic": ["Health", "Military", "Utilities"]}
+
+tsm_schema = build_schema(
+    {
+        "topic": {
+            "validators": [
+                [
+                    "tsm_list_mapper",
+                    {"Military": "Army", "Utilities": "Utility"},
+                    True
+                ]
+            ]
+        },
+    }
+)
+```
+This will result in `["Army", "Utility"]`, and the `Health` will be deleted, cause it doesn't have a mapping.
 
 ### Keywords
 1. `map` (`str`) - changes the `field.name` in result dict.
