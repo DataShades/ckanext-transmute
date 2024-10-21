@@ -254,20 +254,19 @@ The result here will be `["Health", "Army", "Utility"]`
 And here's an example with remove:
 
 ```py
-data: dict[str, Any] = {"topic": ["Health", "Military", "Utilities"]}
+data = {"topic": ["Health", "Military", "Utilities"]}
 
-tsm_schema = build_schema(
-    {
-        "topic": {
-            "validators": [
-                [
-                    "tsm_list_mapper",
-                    {"Military": "Army", "Utilities": "Utility"},
-                    True
-                ]
+schema = build_schema(
+    "topic": {
+        "validators": [
+            [
+                "tsm_list_mapper",
+                {"Military": "Army", "Utilities": "Utility"},
+                True
             ]
-        },
-    }
+        ]
+    },
+    ...
 )
 ```
 This will result in `["Army", "Utility"]`, and the `Health` will be deleted, cause it doesn't have a mapping.
