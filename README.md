@@ -1,4 +1,4 @@
-[![Tests](https://github.com/mutantsan/ckanext-transmute/actions/workflows/test.yml/badge.svg)](https://github.com/mutantsan/ckanext-transmute/actions/workflows/test.yml)
+[![Tests](https://github.com/DataShades/ckanext-transmute/actions/workflows/test.yml/badge.svg)](https://github.com/DataShades/ckanext-transmute/actions/workflows/test.yml)
 
 # ckanext-transmute
 This extension helps to validate and convert data based on a specific schema.
@@ -319,7 +319,7 @@ To install ckanext-transmute:
 
 2. Clone the source and install it on the virtualenv
 
-    git clone https://github.com/mutantsan/ckanext-transmute.git
+    git clone https://github.com/DataShades/ckanext-transmute.git
     cd ckanext-transmute
     pip install -e .
 	pip install -r requirements.txt
@@ -338,7 +338,7 @@ To install ckanext-transmute:
 To install ckanext-transmute for development, activate your CKAN virtualenv and
 do:
 
-    git clone https://github.com/mutantsan/ckanext-transmute.git
+    git clone https://github.com/DataShades/ckanext-transmute.git
     cd ckanext-transmute
     python setup.py develop
     pip install -r dev-requirements.txt
