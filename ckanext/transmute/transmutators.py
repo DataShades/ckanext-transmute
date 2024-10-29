@@ -10,7 +10,7 @@ import ckan.lib.navl.dictization_functions as df
 from ckanext.transmute.types import Field
 
 _transmutators: dict[str, Callable[..., Any]] = {}
-
+SENTINEL = object()
 
 def get_transmutators():
     return _transmutators
@@ -286,5 +286,29 @@ def list_mapper(
         result.append(map_value or value)
 
     field.value = result
+
+    return field
+
+@transmutator
+def map_value(
+    field: Field,
+    test_value: Any,
+    if_same: Any,
+    if_different: Any = SENTINEL,
+) -> Field:
+    """Replace value with other value.
+
+    Args:
+        field: Field object
+        test_value: value that will be compared to field value
+        if_same: value to use if test_value matches the field value
+        if_different: value to use if test_value does not matche the field value.
+            Leave empty to keep original value of the field.
+    """
+    if field.value == test_value:
+        field.value = if_same
+
+    elif if_different is not SENTINEL:
+        field.value = if_different
 
     return field

@@ -63,12 +63,7 @@ class SchemaField:
 
         return self._get_sibling_field_name(self.replace_from)
 
-    def _get_sibling_field_name(self, field_name: str) -> Optional[Any]:
-        field = self.definition["fields"].get(field_name)
-
-        if not field:
-            raise SchemaFieldError(f"Field: sibling field is not exists: {field_name}")
-
+    def _get_sibling_field_name(self, field_name: str) -> str:
         return field_name
 
 
