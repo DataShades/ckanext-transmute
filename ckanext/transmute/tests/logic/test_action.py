@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from typing import Any
-from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
 
 import pytest
 
 import ckan.lib.helpers as h
-import ckan.tests.factories as factories
 from ckan.logic import ValidationError
 from ckan.tests.helpers import call_action
 
+from ckanext.transmute.exception import SchemaParsingError
 from ckanext.transmute.tests.helpers import build_schema
 from ckanext.transmute.types import MODE_FIRST_FILLED
 
@@ -17,7 +16,7 @@ from ckanext.transmute.types import MODE_FIRST_FILLED
 @pytest.mark.usefixtures("with_plugins")
 class TestTransmuteAction:
     def test_custom_root(self):
-        """Action allows using a root different from "Dataset" """
+        """Action allows using a root different from "Dataset"."""
         result = call_action(
             "tsm_transmute",
             data={},
@@ -31,7 +30,7 @@ class TestTransmuteAction:
 
     def test_transmute_default(self):
         """If the origin evaluates to False it must be replaced
-        with the default value
+        with the default value.
         """
         data: dict[str, Any] = {
             "metadata_created": "",
@@ -59,7 +58,7 @@ class TestTransmuteAction:
         )
 
     def test_transmute_default_with_origin_value(self):
-        """The default value mustn't replace the origin value"""
+        """The default value mustn't replace the origin value."""
         metadata_created: str = "2024-02-03"
         metadata_created_default: str = "2022-02-03"
 
@@ -87,7 +86,7 @@ class TestTransmuteAction:
 
     def test_transmute_default_from_without_origin_value(self, tsm_schema):
         """The `default_from` must copy value from target field if the origin
-        value is empty
+        value is empty.
         """
         data: dict[str, Any] = {
             "metadata_created": "",
@@ -124,7 +123,7 @@ class TestTransmuteAction:
         assert result["metadata_modified"] == h.date_str_to_datetime(metadata_modified)
 
     def test_transmute_default_from_with_empty_target(self):
-        """The target field value could be empty"""
+        """The target field value could be empty."""
         data: dict[str, Any] = {
             "metadata_created": "",
             "metadata_modified": "",
@@ -150,7 +149,7 @@ class TestTransmuteAction:
 
     def test_transmute_replace_from(self):
         """The `replace_from` must copy value from target field and replace
-        the origin value whether it is empty or not
+        the origin value whether it is empty or not.
         """
         metadata_created: str = "2024-02-03"
         metadata_modified: str = "2022-02-03"
@@ -178,8 +177,7 @@ class TestTransmuteAction:
         assert result["metadata_modified"] == result["metadata_created"]
 
     def test_transmute_replace_from_multiple(self):
-        """Replace from multiple fields must combine values of those fields"""
-
+        """Replace from multiple fields must combine values of those fields."""
         data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
 
         tsm_schema = build_schema(
@@ -202,8 +200,7 @@ class TestTransmuteAction:
         assert result["field_3"] == data["field_1"] + data["field_2"]
 
     def test_transmute_replace_from_multiple_different_types(self):
-        """Replace from multiple fields must combine values of those fields"""
-
+        """Replace from multiple fields must combine values of those fields."""
         data = {
             "field_1": [1, 2, 3],
             "field_2": 1,
@@ -234,8 +231,7 @@ class TestTransmuteAction:
         ]
 
     def test_transmute_default_from_multiple(self):
-        """Default from multiple fields must combine values of those fields"""
-
+        """Default from multiple fields must combine values of those fields."""
         data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
 
         tsm_schema = build_schema(
@@ -258,8 +254,7 @@ class TestTransmuteAction:
         assert result["field_3"] == data["field_1"] + data["field_2"]
 
     def test_transmute_default_from_multiple_different_types(self):
-        """Default from multiple fields must combine values of those fields"""
-
+        """Default from multiple fields must combine values of those fields."""
         data = {
             "field_1": [1, 2, 3],
             "field_2": 1,
@@ -324,7 +319,7 @@ class TestTransmuteAction:
         result["title_ar"] == data["title_translated"][0]["nested_field"]["ar"]
 
     def test_transmute_remove_field(self):
-        """Field with `remove` must be excluded from the result"""
+        """Field with `remove` must be excluded from the result."""
         data: dict[str, Any] = {
             "metadata_created": "2024-02-03",
             "metadata_modified": "2022-02-03",
@@ -350,7 +345,8 @@ class TestTransmuteAction:
 
     def test_transmute_value(self):
         """The`value` must replace the origin value, whenever
-        it's empty or not"""
+        it's empty or not.
+        """
         data: dict[str, Any] = {
             "field1": "",
             "field2": "hello-world",
@@ -400,7 +396,7 @@ class TestTransmuteAction:
             ],
         }
 
-        result = call_action(
+        call_action(
             "tsm_transmute",
             data=data,
             schema=tsm_schema,
@@ -430,7 +426,7 @@ class TestTransmuteAction:
         }
 
     def test_transmute_no_field_schema(self):
-        """If no fields specified, there is nothing to do"""
+        """If no fields specified, there is nothing to do."""
         result = call_action(
             "tsm_transmute",
             data={"title": "test"},
@@ -440,7 +436,7 @@ class TestTransmuteAction:
         assert result == {"title": "test"}
 
     def test_transmute_no_data(self):
-        """Data is required"""
+        """Data is required."""
         with pytest.raises(ValidationError):
             call_action(
                 "tsm_transmute",
@@ -448,12 +444,12 @@ class TestTransmuteAction:
             )
 
     def test_transmute_no_schema(self):
-        """Schema is required"""
+        """Schema is required."""
         with pytest.raises(ValidationError):
             call_action("tsm_transmute", data={"title": "test"})
 
     def test_transmute_empty_data(self):
-        """If there is no data, there is no sense to do anything"""
+        """If there is no data, there is no sense to do anything."""
         result = call_action(
             "tsm_transmute",
             data={},
@@ -463,7 +459,7 @@ class TestTransmuteAction:
         assert len(result) == 0
 
     def test_transmute_empty_schema(self):
-        """Schema root type is required"""
+        """Schema root type is required."""
         with pytest.raises(SchemaParsingError) as e:
             call_action("tsm_transmute", data={"title": "test"}, schema={})
 
@@ -471,7 +467,7 @@ class TestTransmuteAction:
 
     def test_transmute_new_field_inherit(self):
         """We can define a new field in schema and it will be
-        added to the result data
+        added to the result data.
         """
         data: dict[str, Any] = {
             "metadata_created": "",
@@ -497,7 +493,7 @@ class TestTransmuteAction:
         assert result["metadata_modified"] == result["metadata_created"]
 
     def test_transmute_new_field_from_default_and_value(self):
-        """Default runs after value"""
+        """Default runs after value."""
         data: dict[str, Any] = {}
 
         tsm_schema = build_schema({"field1": {"default": 101, "value": 102}})
@@ -514,7 +510,7 @@ class TestTransmuteAction:
 
     def test_transmute_new_field_from_value(self):
         """We can define a new field in schema and it will be
-        added to the result data
+        added to the result data.
         """
         data: dict[str, Any] = {}
 
@@ -535,7 +531,7 @@ class TestTransmuteAction:
 
         tsm_schema = build_schema({"field1": {"value": 101}})
 
-        for i in range(10):
+        for _i in range(10):
             result = call_action(
                 "tsm_transmute",
                 data=data,
@@ -652,8 +648,7 @@ class TestTransmuteAction:
         assert e.value.error_dict["extras"] == ["Original value has different type"]
 
     def test_transmute_replace_from_inherit_first_filled_first_true(self):
-        """Replace from multiple fields must combine values of those fields"""
-
+        """Replace from multiple fields must combine values of those fields."""
         data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
 
         tsm_schema = build_schema(
@@ -677,8 +672,7 @@ class TestTransmuteAction:
         assert result["field_3"] == data["field_1"]
 
     def test_transmute_replace_from_inherit_first_filled_last_true(self):
-        """Replace from multiple fields must combine values of those fields"""
-
+        """Replace from multiple fields must combine values of those fields."""
         data = {"field_1": "", "field_2": [3, 4, 5], "field_3": ""}
 
         tsm_schema = build_schema(
@@ -702,8 +696,7 @@ class TestTransmuteAction:
         assert result["field_3"] == data["field_2"]
 
     def test_transmute_default_from_inherit_first_filled_last_true(self):
-        """Replace from multiple fields must combine values of those fields"""
-
+        """Replace from multiple fields must combine values of those fields."""
         data = {"field_1": "", "field_2": [3, 4, 5], "field_3": ""}
 
         tsm_schema = build_schema(

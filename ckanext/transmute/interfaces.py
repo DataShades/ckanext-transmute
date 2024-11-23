@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from typing import Any
+
 from ckan.plugins.interfaces import Interface
 
 
 class ITransmute(Interface):
-    """Main extension point of ckanext-transmute.
-    """
+    """Main extension point of ckanext-transmute."""
 
     def get_transmutators(self) -> dict[str, Any]:
         """Register custom transmutation functions.
@@ -53,5 +53,4 @@ class ITransmute(Interface):
         Returns:
             Mapping with definitions of named schemas.
         """
-
         return {}

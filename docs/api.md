@@ -1,4 +1,4 @@
 # API
 
 
-::: transmute.logic.action.get.tsm_transmute
+::: transmute.logic.action.tsm_transmute

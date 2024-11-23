@@ -1,15 +1,14 @@
 from __future__ import annotations
-from re import T
 
 from typing import Any
 
 import pytest
 
-from ckan.tests.helpers import call_action
 from ckan.logic import ValidationError
+from ckan.tests.helpers import call_action
 
-from ckanext.transmute.tests.helpers import build_schema
 from ckanext.transmute.exception import TransmutatorError
+from ckanext.transmute.tests.helpers import build_schema
 
 
 @pytest.mark.usefixtures("with_plugins")
@@ -35,8 +34,7 @@ class TestTransmutators:
 
     @pytest.mark.parametrize("default", [False, 0, "", [], {}, None])
     def test_default_allows_falsy_values(self, default):
-        """False, 0, "", etc. can be used as a default value"""
-
+        """False, 0, "", etc. can be used as a default value."""
         tsm_schema = build_schema(
             {
                 "field_name": {"default": default},
@@ -100,8 +98,8 @@ class TestTrimStringTransmutator:
             {"field_name": {"validators": [["tsm_trim_string", 0, 1]]}}
         )
 
-        with pytest.raises(TransmutatorError) as e:
-            result = call_action(
+        with pytest.raises(TransmutatorError):
+            call_action(
                 "tsm_transmute",
                 data=data,
                 schema=tsm_schema,
@@ -161,7 +159,7 @@ class TestConcatTransmutator:
         assert result["field_name"] == new_field_value
 
     def test_concat_transmutator_without_self(self):
-        """You can skip using $self if you want for some reason"""
+        """You can skip using $self if you want for some reason."""
         data: dict[str, Any] = {
             "identifier": "right-to-the-night-results",
         }
@@ -189,11 +187,11 @@ class TestConcatTransmutator:
             root="Dataset",
         )
 
-        new_field_value = f"https://ckan.url/dataset/information"
+        new_field_value = "https://ckan.url/dataset/information"
         assert result["field_name"] == new_field_value
 
     def test_concat_transmutator_with_not_string_arg(self):
-        """You can skip using $self if you want for some reason"""
+        """You can skip using $self if you want for some reason."""
         data: dict[str, Any] = {
             "identifier": "right-to-the-night-results",
         }
@@ -221,12 +219,11 @@ class TestConcatTransmutator:
             root="Dataset",
         )
 
-        new_field_value = f"https://ckan.url/dataset/1"
+        new_field_value = "https://ckan.url/dataset/1"
         assert result["field_name"] == new_field_value
 
     def test_concat_transmutator_with_field_link(self):
-        """We are able to use fields from schema as a concat item"""
-
+        """We are able to use fields from schema as a concat item."""
         data: dict[str, Any] = {
             "identifier": "right-to-the-night-results",
             "url": "https://ckan.url/dataset/",
@@ -259,8 +256,8 @@ class TestConcatTransmutator:
 
     def test_concat_transmutator_with_field_link_nested(self):
         """We are able to use fields from schema as a concat
-        item from within nested structure"""
-
+        item from within nested structure.
+        """
         data: dict[str, Any] = {
             "title": "Package title",
             "resources": [
@@ -317,7 +314,7 @@ class TestConcatTransmutator:
 @pytest.mark.usefixtures("with_plugins")
 class TestUniqueOnlyTransmutator:
     def test_unique_only(self):
-        """You can skip using $self if you want for some reason"""
+        """You can skip using $self if you want for some reason."""
         data: dict[str, Any] = {"field_name": [1, 2, 3, 3, 4, 5, 6, 6]}
 
         tsm_schema = build_schema(
@@ -338,7 +335,7 @@ class TestUniqueOnlyTransmutator:
         assert result["field_name"] == [1, 2, 3, 4, 5, 6]
 
     def test_unique_only_for_not_list(self):
-        """You can skip using $self if you want for some reason"""
+        """You can skip using $self if you want for some reason."""
         data: dict[str, Any] = {"field_name": 1}
 
         tsm_schema = build_schema(
@@ -348,7 +345,7 @@ class TestUniqueOnlyTransmutator:
                 },
             }
         )
-        with pytest.raises(ValidationError) as e:
+        with pytest.raises(ValidationError):
             call_action(
                 "tsm_transmute",
                 data=data,
@@ -357,7 +354,7 @@ class TestUniqueOnlyTransmutator:
             )
 
     def test_unique_only_empty_list(self):
-        """You can skip using $self if you want for some reason"""
+        """You can skip using $self if you want for some reason."""
         data: dict[str, Any] = {"field_name": []}
 
         tsm_schema = build_schema(

@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture()
 def tsm_schema():
     return {
         "root": "Dataset",

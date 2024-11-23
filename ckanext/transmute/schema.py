@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union
-
 import copy
 import dataclasses
+from typing import Any
 
-from ckan.logic.schema import validator_args
 from ckan import types
-from ckanext.transmute.exception import SchemaParsingError, SchemaFieldError
+from ckan.logic.schema import validator_args
+
+from ckanext.transmute.exception import SchemaFieldError, SchemaParsingError
 from ckanext.transmute.utils import SENTINEL
 
 
@@ -16,15 +16,15 @@ class SchemaField:
     name: str
     type: str
     definition: dict[str, Any]
-    map: Optional[str] = None
+    map: str | None = None
     validators: list[Any] = dataclasses.field(default_factory=list)
     multiple: bool = False
     remove: bool = False
     default: Any = SENTINEL
-    default_from: Optional[str] = None
+    default_from: str | None = None
     value: Any = SENTINEL
-    replace_from: Optional[str] = None
-    inherit_mode: Optional[str] = "combine"
+    replace_from: str | None = None
+    inherit_mode: str | None = "combine"
     update: bool = False
     validate_missing: bool = False
     weight: int = 0
@@ -39,7 +39,7 @@ class SchemaField:
     def is_multiple(self) -> bool:
         return bool(self.multiple)
 
-    def get_default_from(self) -> Union[list[str], str]:
+    def get_default_from(self) -> list[str] | str:
         if not self.default_from:
             raise SchemaFieldError("Field: `default_from` field name is not defined")
 
@@ -51,7 +51,7 @@ class SchemaField:
 
         return self._get_sibling_field_name(self.default_from)
 
-    def get_replace_from(self) -> Union[list[str], str]:
+    def get_replace_from(self) -> list[str] | str:
         if not self.replace_from:
             raise SchemaFieldError("Field: `replace_from` field name is not defined")
 
@@ -82,7 +82,7 @@ class SchemaParser:
         if not root_type:
             raise SchemaParsingError("Schema: root type is missing")
 
-        if not root_type in self.schema.get("types", []):
+        if root_type not in self.schema.get("types", []):
             raise SchemaParsingError("Schema: root_type is declared but not defined")
 
         return root_type
@@ -104,7 +104,7 @@ class SchemaParser:
         self, field_name: str, field_meta: dict[str, Any], _type: str
     ) -> SchemaField:
         """Create a SchemaField combining all the
-        information about field
+        information about field.
 
         Args:
             field_name (str): current field original name
@@ -114,7 +114,6 @@ class SchemaParser:
         Returns:
             SchemaField: SchemaField object
         """
-
         params: dict[str, Any] = dict({"type": _type}, **field_meta)
         return SchemaField(name=field_name, definition=self.types[_type], **params)
 

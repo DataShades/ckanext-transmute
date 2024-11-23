@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-import logging
 import contextvars
-from typing import Any, Union
-
-from ckan import types
-import ckan.plugins.toolkit as tk
+import logging
+from typing import Any
 
 import ckan.lib.navl.dictization_functions as df
-from ckan.logic import validate, ValidationError
+import ckan.plugins.toolkit as tk
+from ckan import types
+from ckan.logic import ValidationError, validate
 
-from ckanext.transmute.types import Field, MODE_COMBINE
-from ckanext.transmute.schema import SchemaParser, SchemaField
-from ckanext.transmute.schema import transmute_schema
 from ckanext.transmute.exception import TransmutatorError
-from ckanext.transmute.utils import get_transmutator, SENTINEL, get_schema
-
+from ckanext.transmute.schema import SchemaField, SchemaParser, transmute_schema
+from ckanext.transmute.types import MODE_COMBINE, Field
+from ckanext.transmute.utils import SENTINEL, get_schema, get_transmutator
 
 log = logging.getLogger(__name__)
 data_ctx = contextvars.ContextVar("data")
@@ -60,14 +57,13 @@ def tsm_transmute(context: types.Context, data_dict: dict[str, Any]) -> dict[str
 
 
 def _transmute_data(data, definition, root):
-    """Mutates an actual data in `data` dict
+    """Mutates an actual data in `data` dict.
 
     Args:
         data (dict: [str, Any]): a data to mutate
         definition (SchemaParser): SchemaParser object
         root (str): a root schema type
     """
-
     schema = definition.types[root]
 
     if not schema:
@@ -166,12 +162,12 @@ def _process_field(
 
 
 def _default_from(data: dict[str, Any], field: SchemaField):
-    default_from: Union[list[str], str] = field.get_default_from()
+    default_from: list[str] | str = field.get_default_from()
     return _get_external_fields(data, default_from, field)
 
 
 def _replace_from(data: dict[str, Any], field: SchemaField):
-    replace_from: Union[list[str], str] = field.get_replace_from()
+    replace_from: list[str] | str = field.get_replace_from()
     return _get_external_fields(data, replace_from, field)
 
 
@@ -202,7 +198,7 @@ def _combine_from_fields(data: dict[str, Any], external_fields: list[str]):
 
 
 def _get_first_filled(data: dict[str, Any], external_fields: list[str]):
-    """Return first not-empty field value"""
+    """Return first not-empty field value."""
     for field_name in external_fields:
         field_value = data[field_name]
 
@@ -211,7 +207,7 @@ def _get_first_filled(data: dict[str, Any], external_fields: list[str]):
 
 
 def _apply_validators(field: Field, validators: list[str | list[str]]):
-    """Applies validators sequentially to the field value
+    """Applies validators sequentially to the field value.
 
     Args:
         field (Field): Field object

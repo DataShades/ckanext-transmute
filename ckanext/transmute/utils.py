@@ -41,7 +41,9 @@ def get_all_transmutators() -> list[str]:
         for plugin in reversed(list(p.PluginImplementations(ITransmute))):
             for name, fn in plugin.get_transmutators().items():
                 log.debug(
-                    f"Transmutator function {name} from plugin {plugin.name} was inserted"
+                    "Transmutator function %s from plugin %s was inserted",
+                    name,
+                    plugin.name,
                 )
                 _transmutator_cache[name] = fn
 
@@ -50,6 +52,76 @@ def get_all_transmutators() -> list[str]:
 
 def get_json_schema() -> dict[str, Any]:
     transmutators = get_all_transmutators()
+    fields_definition = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "validators": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "enum": transmutators,
+                        },
+                        {
+                            "type": "array",
+                            "minItems": 2,
+                            "items": [
+                                {
+                                    "type": "string",
+                                    "enum": transmutators,
+                                }
+                            ],
+                            "additionalItems": {"$ref": "#/$defs/anytype"},
+                        },
+                    ]
+                },
+            },
+            "map": {"type": "string"},
+            "default": {"$ref": "#/$defs/anytype"},
+            "default_from": {
+                "anyOf": [
+                    {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "string"},
+                    },
+                    {"type": "string"},
+                ]
+            },
+            "replace_from": {
+                "anyOf": [
+                    {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "string"},
+                    },
+                    {"type": "string"},
+                ]
+            },
+            "inherit_mode": {
+                "type": "string",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                MODE_COMBINE,
+                                MODE_FIRST_FILLED,
+                            ],
+                        }
+                    ]
+                },
+            },
+            "value": {"$ref": "#/$defs/anytype"},
+            "multiple": {"type": "boolean"},
+            "remove": {"type": "boolean"},
+            "type": {"type": "string"},
+            "update": {"type": "boolean"},
+        },
+    }
     return {
         "$schema": "http://json-schema.org/draft-04/schema",
         "type": "object",
@@ -74,78 +146,7 @@ def get_json_schema() -> dict[str, Any]:
                                     "type": "object",
                                     "minProperties": 1,
                                     "propertyNames": {"pattern": "^[A-Za-z_-]*$"},
-                                    "additionalProperties": {
-                                        "type": "object",
-                                        "additionalProperties": False,
-                                        "properties": {
-                                            "validators": {
-                                                "type": "array",
-                                                "minItems": 1,
-                                                "items": {
-                                                    "oneOf": [
-                                                        {
-                                                            "type": "string",
-                                                            "enum": transmutators,
-                                                        },
-                                                        {
-                                                            "type": "array",
-                                                            "minItems": 2,
-                                                            "items": [
-                                                                {
-                                                                    "type": "string",
-                                                                    "enum": transmutators,
-                                                                }
-                                                            ],
-                                                            "additionalItems": {
-                                                                "$ref": "#/$defs/anytype"
-                                                            },
-                                                        },
-                                                    ]
-                                                },
-                                            },
-                                            "map": {"type": "string"},
-                                            "default": {"$ref": "#/$defs/anytype"},
-                                            "default_from": {
-                                                "anyOf": [
-                                                    {
-                                                        "type": "array",
-                                                        "minItems": 1,
-                                                        "items": {"type": "string"},
-                                                    },
-                                                    {"type": "string"},
-                                                ]
-                                            },
-                                            "replace_from": {
-                                                "anyOf": [
-                                                    {
-                                                        "type": "array",
-                                                        "minItems": 1,
-                                                        "items": {"type": "string"},
-                                                    },
-                                                    {"type": "string"},
-                                                ]
-                                            },
-                                            "inherit_mode": {
-                                                "type": "string",
-                                                "items": {
-                                                    "oneOf": [
-                                                        {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                MODE_COMBINE,
-                                                                MODE_FIRST_FILLED,
-                                                            ],
-                                                        }
-                                                    ]
-                                                },
-                                            },
-                                            "value": {"$ref": "#/$defs/anytype"},
-                                            "multiple": {"type": "boolean"},
-                                            "remove": {"type": "boolean"},
-                                            "type": {"type": "string"},
-                                            "update": {"type": "boolean"},
-                                        },
-                                    },
+                                    "additionalProperties": fields_definition,
                                 }
                             },
                         },

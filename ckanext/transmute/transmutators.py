@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import Callable, Any, Optional
+
 from datetime import datetime
+from typing import Any, Callable
 
-from dateutil.parser import parse, ParserError
+from dateutil.parser import ParserError, parse
 
-import ckan.plugins.toolkit as tk
 import ckan.lib.navl.dictization_functions as df
+import ckan.plugins.toolkit as tk
 
 from ckanext.transmute.types import Field
 
@@ -24,7 +25,7 @@ def transmutator(func):
 
 @transmutator
 def name_validator(field: Field) -> Field:
-    """Wrapper over CKAN default `name_validator` validator
+    """Wrapper over CKAN default `name_validator` validator.
 
     Args:
         field (Field): Field object
@@ -43,7 +44,7 @@ def name_validator(field: Field) -> Field:
 
 @transmutator
 def to_lowercase(field: Field) -> Field:
-    """Casts string value to lowercase
+    """Casts string value to lowercase.
 
     Args:
         field (Field): Field object
@@ -57,7 +58,7 @@ def to_lowercase(field: Field) -> Field:
 
 @transmutator
 def to_uppercase(field: Field) -> Field:
-    """Casts string value to uppercase
+    """Casts string value to uppercase.
 
     Args:
         field (Field): Field object
@@ -71,10 +72,10 @@ def to_uppercase(field: Field) -> Field:
 
 @transmutator
 def string_only(field: Field) -> Field:
-    """Validates if field.value is string
+    """Validates if field.value is string.
 
     Args:
-        value (Field): Field object
+        field (Field): Field object
 
     Raises:
         df.Invalid: raises is the field.value is not string
@@ -90,7 +91,7 @@ def string_only(field: Field) -> Field:
 @transmutator
 def isodate(field: Field) -> Field:
     """Validates datetime string
-    Mutates an iso-like string to datetime object
+    Mutates an iso-like string to datetime object.
 
     Args:
         field (Field): Field object
@@ -101,7 +102,6 @@ def isodate(field: Field) -> Field:
     Returns:
         Field: the same Field with casted value
     """
-
     if isinstance(field.value, datetime):
         return field
 
@@ -115,7 +115,7 @@ def isodate(field: Field) -> Field:
 
 @transmutator
 def to_string(field: Field) -> Field:
-    """Casts field.value to str
+    """Casts field.value to str.
 
     Args:
         field (Field): Field object
@@ -130,7 +130,7 @@ def to_string(field: Field) -> Field:
 
 @transmutator
 def stop_on_empty(field: Field) -> Field:
-    """Stop transmutation if field is empty
+    """Stop transmutation if field is empty.
 
     Args:
         field (Field): Field object
@@ -145,11 +145,12 @@ def stop_on_empty(field: Field) -> Field:
 
 
 @transmutator
-def get_nested(field: Field, *path) -> Field:
-    """Fetches a nested value from a field
+def get_nested(field: Field, *path: str) -> Field:
+    """Fetches a nested value from a field.
 
     Args:
         field (Field): Field object
+        path: Iterable with path segments
 
     Raises:
         df.Invalid: raises if path doesn't exist
@@ -166,17 +167,16 @@ def get_nested(field: Field, *path) -> Field:
 
 
 @transmutator
-def trim_string(field: Field, max_length) -> Field:
-    """Trim string lenght
+def trim_string(field: Field, max_length: int) -> Field:
+    """Trim string lenght.
 
     Args:
-        value (Field): Field object
+        field (Field): Field object
         max_length (int): String max length
 
     Returns:
         Field: the same Field object if it's valid
     """
-
     if not isinstance(max_length, int):
         raise df.Invalid(tk._("max_length must be integer"))
 
@@ -187,7 +187,7 @@ def trim_string(field: Field, max_length) -> Field:
 @transmutator
 def concat(field: Field, *strings: Any) -> Field:
     """Concat strings to build a new one
-    Use $self to point on field value
+    Use $self to point on field value.
 
     Args:
         field (Field): Field object
@@ -222,7 +222,7 @@ def concat(field: Field, *strings: Any) -> Field:
 
 @transmutator
 def unique_only(field: Field) -> Field:
-    """Preserve only unique values from list
+    """Preserve only unique values from list.
 
     Args:
         field (Field): Field object
@@ -238,7 +238,7 @@ def unique_only(field: Field) -> Field:
 
 @transmutator
 def mapper(
-    field: Field, mapping: dict[Any, Any], default: Optional[Any] = None
+    field: Field, mapping: dict[Any, Any], default: Any | None = None
 ) -> Field:
     """Map a value with a new value. The initial value must serve as a key within
     a mapping dictionary, while the dict value will represent the updated value.
@@ -246,7 +246,7 @@ def mapper(
     Args:
         field (Field): Field object
         mapping (dict[Any, Any]): A dictionary representing the mapping of values.
-        default (Any): The default value to be used when the key is not found in the mapping.
+        default (Any): The default value to be used when the key is not found.
             If the default value is not provided, the current value will be used as it.
 
     Returns:
@@ -263,10 +263,9 @@ def mapper(
 def list_mapper(
     field: Field,
     mapping: dict[Any, Any],
-    remove: Optional[bool] = False,
+    remove: bool | None = False,
 ) -> Field:
-    """
-    Maps values within a list to their corresponding values in a provided mapping dictionary.
+    """Maps values within a list to corresponding values from the provided dictionary.
 
     Args:
         field (Field): Field object

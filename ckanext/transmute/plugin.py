@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 from typing import Any
+
 import ckan.plugins as p
 import ckan.plugins.toolkit as tk
 
+from ckanext.transmute.interfaces import ITransmute
 from ckanext.transmute.logic.action import get_actions
 from ckanext.transmute.logic.auth import get_auth_functions
 from ckanext.transmute.transmutators import get_transmutators
-from ckanext.transmute.interfaces import ITransmute
 
 from . import utils
 
@@ -27,12 +28,12 @@ class TransmutePlugin(p.SingletonPlugin):
 
     # IActions
     def get_actions(self):
-        """Registers a list of extension specific actions"""
+        """Registers a list of extension specific actions."""
         return get_actions()
 
     # IAuthFunctions
     def get_auth_functions(self):
-        """Registers a list of extension specific auth function"""
+        """Registers a list of extension specific auth function."""
         return get_auth_functions()
 
     # ITransmute
@@ -41,8 +42,10 @@ class TransmutePlugin(p.SingletonPlugin):
 
     def get_transmutation_schemas(self) -> dict[str, Any]:
         prefix = "ckanext.transmute.schema."
-        return {
-            key[len(prefix) :]: json.load(open(tk.config[key]))
-            for key in tk.config
-            if key.startswith(prefix)
-        }
+        schemas: dict[str, Any] = {}
+        for key in tk.config:
+            if not key.startswith(prefix):
+                continue
+            with open(tk.config[key]) as src:
+                schemas[key[len(prefix) :]] = json.load(src)
+        return schemas

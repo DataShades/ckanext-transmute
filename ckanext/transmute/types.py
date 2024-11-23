@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import Any
+
 from typing_extensions import TypedDict
 
 
