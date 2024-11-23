@@ -10,21 +10,29 @@ import ckan.plugins.toolkit as tk
 
 from ckanext.transmute.types import Field
 
-_transmutators: dict[str, Callable[..., Any]] = {}
 SENTINEL = object()
 
 
 def get_transmutators():
-    return _transmutators
+    return {
+        "tsm_name_validator": tsm_name_validator,
+        "tsm_to_lowercase": tsm_to_lowercase,
+        "tsm_to_uppercase": tsm_to_uppercase,
+        "tsm_string_only": tsm_string_only,
+        "tsm_isodate": tsm_isodate,
+        "tsm_to_string": tsm_to_string,
+        "tsm_stop_on_empty": tsm_stop_on_empty,
+        "tsm_get_nested": tsm_get_nested,
+        "tsm_trim_string": tsm_trim_string,
+        "tsm_concat": tsm_concat,
+        "tsm_unique_only": tsm_unique_only,
+        "tsm_mapper": tsm_mapper,
+        "tsm_list_mapper": tsm_list_mapper,
+        "tsm_map_value": tsm_map_value,
+    }
 
 
-def transmutator(func):
-    _transmutators[f"tsm_{func.__name__}"] = func
-    return func
-
-
-@transmutator
-def name_validator(field: Field) -> Field:
+def tsm_name_validator(field: Field) -> Field:
     """Wrapper over CKAN default `name_validator` validator.
 
     Args:
@@ -42,8 +50,7 @@ def name_validator(field: Field) -> Field:
     return field
 
 
-@transmutator
-def to_lowercase(field: Field) -> Field:
+def tsm_to_lowercase(field: Field) -> Field:
     """Casts string value to lowercase.
 
     Args:
@@ -56,8 +63,7 @@ def to_lowercase(field: Field) -> Field:
     return field
 
 
-@transmutator
-def to_uppercase(field: Field) -> Field:
+def tsm_to_uppercase(field: Field) -> Field:
     """Casts string value to uppercase.
 
     Args:
@@ -70,8 +76,7 @@ def to_uppercase(field: Field) -> Field:
     return field
 
 
-@transmutator
-def string_only(field: Field) -> Field:
+def tsm_string_only(field: Field) -> Field:
     """Validates if field.value is string.
 
     Args:
@@ -88,8 +93,7 @@ def string_only(field: Field) -> Field:
     return field
 
 
-@transmutator
-def isodate(field: Field) -> Field:
+def tsm_isodate(field: Field) -> Field:
     """Validates datetime string
     Mutates an iso-like string to datetime object.
 
@@ -113,8 +117,7 @@ def isodate(field: Field) -> Field:
     return field
 
 
-@transmutator
-def to_string(field: Field) -> Field:
+def tsm_to_string(field: Field) -> Field:
     """Casts field.value to str.
 
     Args:
@@ -128,8 +131,7 @@ def to_string(field: Field) -> Field:
     return field
 
 
-@transmutator
-def stop_on_empty(field: Field) -> Field:
+def tsm_stop_on_empty(field: Field) -> Field:
     """Stop transmutation if field is empty.
 
     Args:
@@ -144,8 +146,7 @@ def stop_on_empty(field: Field) -> Field:
     return field
 
 
-@transmutator
-def get_nested(field: Field, *path: str) -> Field:
+def tsm_get_nested(field: Field, *path: str) -> Field:
     """Fetches a nested value from a field.
 
     Args:
@@ -166,8 +167,7 @@ def get_nested(field: Field, *path: str) -> Field:
     return field
 
 
-@transmutator
-def trim_string(field: Field, max_length: int) -> Field:
+def tsm_trim_string(field: Field, max_length: int) -> Field:
     """Trim string lenght.
 
     Args:
@@ -184,14 +184,14 @@ def trim_string(field: Field, max_length: int) -> Field:
     return field
 
 
-@transmutator
-def concat(field: Field, *strings: Any) -> Field:
-    """Concat strings to build a new one
-    Use $self to point on field value.
+def tsm_concat(field: Field, *strings: Any) -> Field:
+    """Concatenate strings to build a new one.
+
+    Use `$self` to point on the current field value.
 
     Args:
-        field (Field): Field object
-        *strings (tuple[str]): strings to concat with
+        field: Field object
+        strings: strings to concat with
 
     Returns:
         Field: the same Field with new value
@@ -220,8 +220,7 @@ def concat(field: Field, *strings: Any) -> Field:
     return field
 
 
-@transmutator
-def unique_only(field: Field) -> Field:
+def tsm_unique_only(field: Field) -> Field:
     """Preserve only unique values from list.
 
     Args:
@@ -236,8 +235,7 @@ def unique_only(field: Field) -> Field:
     return field
 
 
-@transmutator
-def mapper(
+def tsm_mapper(
     field: Field, mapping: dict[Any, Any], default: Any | None = None
 ) -> Field:
     """Map a value with a new value. The initial value must serve as a key within
@@ -259,8 +257,7 @@ def mapper(
     return field
 
 
-@transmutator
-def list_mapper(
+def tsm_list_mapper(
     field: Field,
     mapping: dict[Any, Any],
     remove: bool | None = False,
@@ -291,8 +288,7 @@ def list_mapper(
     return field
 
 
-@transmutator
-def map_value(
+def tsm_map_value(
     field: Field,
     test_value: Any,
     if_same: Any,

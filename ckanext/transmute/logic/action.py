@@ -142,6 +142,7 @@ def _process_field(
         else:
             data[field.name] = value = field.value
 
+
     if field.is_multiple():
         for nested_field in value or []:  # type: ignore
             _transmute_data(nested_field, definition, field.type)

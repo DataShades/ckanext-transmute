@@ -76,7 +76,11 @@ theme:
 nav:
     - index.md
     - installation.md
-    - usage.md
+    - Usage:
+        - usage/index.md
+        - usage/schema.md
+        - usage/type.md
+        - usage/transmutators.md
     - api.md
     - interfaces.md
     - configuration.md
