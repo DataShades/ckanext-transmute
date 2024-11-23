@@ -12,7 +12,7 @@ from ckanext.transmute.tests.helpers import build_schema
 from ckanext.transmute.exception import TransmutatorError
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestTransmutators:
     def test_transmute_validator_without_args(self):
         data = {
@@ -53,7 +53,7 @@ class TestTransmutators:
         assert result == {"field_name": default}
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestTrimStringTransmutator:
     def test_trim_string_transmutator(self):
         data: dict[str, Any] = {
@@ -126,7 +126,7 @@ class TestTrimStringTransmutator:
             )
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestConcatTransmutator:
     def test_concat_transmutator_with_self(self):
         data: dict[str, Any] = {
@@ -314,7 +314,7 @@ class TestConcatTransmutator:
             assert res["title"] == f"{result['title']} {res['format'].upper()}"
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestUniqueOnlyTransmutator:
     def test_unique_only(self):
         """You can skip using $self if you want for some reason"""
@@ -378,7 +378,7 @@ class TestUniqueOnlyTransmutator:
         assert result["field_name"] == []
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestMapperTransmutator:
     def test_mapper_with_mapped_value(self):
         data: dict[str, Any] = {"language": "eng"}
@@ -470,7 +470,7 @@ class TestMapperTransmutator:
         assert result["language"] == "ua"
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestListMapperTransmutator:
     def test_list_mapper_with_mapped_value(self):
         data: dict[str, Any] = {"topic": ["Health", "Military", "Utilities"]}

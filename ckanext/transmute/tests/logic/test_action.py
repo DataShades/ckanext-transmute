@@ -14,22 +14,20 @@ from ckanext.transmute.tests.helpers import build_schema
 from ckanext.transmute.types import MODE_FIRST_FILLED
 
 
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins")
 class TestTransmuteAction:
     def test_custom_root(self):
-        """Action allows using a root different from "Dataset"
-        """
+        """Action allows using a root different from "Dataset" """
         result = call_action(
             "tsm_transmute",
             data={},
             schema={
                 "root": "custom",
-                "types": {"custom": {"fields": {"def": {"default": "test"}}}}
+                "types": {"custom": {"fields": {"def": {"default": "test"}}}},
             },
             root="custom",
         )
         assert result == {"def": "test"}
-
 
     def test_transmute_default(self):
         """If the origin evaluates to False it must be replaced
@@ -150,35 +148,6 @@ class TestTransmuteAction:
 
         assert result["metadata_created"] == result["metadata_modified"]
 
-    def test_transmute_default_from_without_defining_target_field(self):
-        """The field in default_from must be defiend in schema
-        Otherwise the SchemaFieldError must be raised
-        """
-        data: dict[str, Any] = {
-            "metadata_created": "",
-            "metadata_modified": "",
-        }
-
-        target_field: str = "metadata_created"
-
-        tsm_schema = build_schema(
-            {
-                "metadata_modified": {
-                    "default_from": target_field,
-                },
-            }
-        )
-
-        with pytest.raises(SchemaFieldError) as e:
-            result = call_action(
-                "tsm_transmute",
-                data=data,
-                schema=tsm_schema,
-                root="Dataset",
-            )
-
-        assert e.value.error == f"Field: sibling field is not exists: {target_field}"
-
     def test_transmute_replace_from(self):
         """The `replace_from` must copy value from target field and replace
         the origin value whether it is empty or not
@@ -231,31 +200,6 @@ class TestTransmuteAction:
         )
 
         assert result["field_3"] == data["field_1"] + data["field_2"]
-
-    def test_transmute_replace_from_multiple_with_not_existed_one(self):
-        """Replace from multiple fields if one of listed field is not exist
-        must raise an error"""
-
-        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
-
-        tsm_schema = build_schema(
-            {
-                "field_1": {},
-                "field_3": {
-                    "replace_from": ["field_1", "field_2"],
-                },
-            }
-        )
-
-        with pytest.raises(SchemaFieldError) as e:
-            result = call_action(
-                "tsm_transmute",
-                data=data,
-                schema=tsm_schema,
-                root="Dataset",
-            )
-
-        assert e.value.error == f"Field: sibling field is not exists: field_2"
 
     def test_transmute_replace_from_multiple_different_types(self):
         """Replace from multiple fields must combine values of those fields"""
@@ -312,31 +256,6 @@ class TestTransmuteAction:
         )
 
         assert result["field_3"] == data["field_1"] + data["field_2"]
-
-    def test_transmute_default_from_multiple_with_not_existed_one(self):
-        """Default from multiple fields if one of listed field is not exist
-        must raise an error"""
-
-        data = {"field_1": [1, 2, 3], "field_2": [3, 4, 5], "field_3": ""}
-
-        tsm_schema = build_schema(
-            {
-                "field_1": {},
-                "field_3": {
-                    "default_from": ["field_1", "field_2"],
-                },
-            }
-        )
-
-        with pytest.raises(SchemaFieldError) as e:
-            result = call_action(
-                "tsm_transmute",
-                data=data,
-                schema=tsm_schema,
-                root="Dataset",
-            )
-
-        assert e.value.error == f"Field: sibling field is not exists: field_2"
 
     def test_transmute_default_from_multiple_different_types(self):
         """Default from multiple fields must combine values of those fields"""
@@ -711,10 +630,7 @@ class TestTransmuteAction:
                 root="Dataset",
             )
 
-        assert (
-            "resource_number: the field value is immutable"
-            in e.value.error_dict["message"]
-        )
+        assert e.value.error_dict["resource_number"] == ["Field value is not mutable"]
 
     def test_transmute_update_different_types(self):
         data: dict[str, Any] = {"extras": ["one"]}
@@ -733,10 +649,7 @@ class TestTransmuteAction:
                 root="Dataset",
             )
 
-        assert (
-            "extras: the origin value has different type"
-            in e.value.error_dict["message"]
-        )
+        assert e.value.error_dict["extras"] == ["Original value has different type"]
 
     def test_transmute_replace_from_inherit_first_filled_first_true(self):
         """Replace from multiple fields must combine values of those fields"""
@@ -814,8 +727,7 @@ class TestTransmuteAction:
         assert result["field_3"] == data["field_2"]
 
 
-@pytest.mark.usefixtures("clean_db")
-@pytest.mark.ckan_config("ckan.plugins", "scheming_datasets")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestValidateAction:
     def test_validate(self):
         dataset = factories.Dataset()

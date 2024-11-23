@@ -72,7 +72,9 @@ class SchemaParser:
         self.schema = copy.deepcopy(schema)
         self.root_type = self.get_root_type()
         self.types = self.parse_types()
-        self.parse_fields()
+        self.parse_fields("pre-fields")
+        self.parse_fields("fields")
+        self.parse_fields("post-fields")
 
     def get_root_type(self):
         root_type: str = self.schema.get("root", "")
@@ -91,10 +93,10 @@ class SchemaParser:
 
         return self.schema["types"]
 
-    def parse_fields(self):
+    def parse_fields(self, field_type: str):
         for _type, type_meta in self.types.items():
-            for field_name, field_meta in type_meta.get("fields", {}).items():
-                type_meta["fields"][field_name] = self._parse_field(
+            for field_name, field_meta in type_meta.setdefault(field_type, {}).items():
+                type_meta[field_type][field_name] = self._parse_field(
                     field_name, field_meta, _type
                 )
 

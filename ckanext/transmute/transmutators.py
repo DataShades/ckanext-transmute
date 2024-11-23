@@ -184,7 +184,7 @@ def trim_string(field: Field, max_length) -> Field:
 
 
 @transmutator
-def concat(field: Field, *strings) -> Field:
+def concat(field: Field, *strings: str) -> Field:
     """Concat strings to build a new one
     Use $self to point on field value
 

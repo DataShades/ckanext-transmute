@@ -63,8 +63,8 @@ def _transmute_data(data, definition, root):
     mutate_fields(data, definition, root)
 
 
-def _weighten_fields(pair: tuple[str, SchemaField]):
-    return pair[1].weight
+def _weighten_fields(field: SchemaField):
+    return field.weight
 
 
 def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
@@ -81,58 +81,16 @@ def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
 
     known_fields: set[str] = set()
 
-    for field_name, field in sorted(schema["fields"].items(), key=_weighten_fields):
-        known_fields.add(field_name)
+    for field in sorted(schema["pre-fields"].values(), key=_weighten_fields):
+        _process_field(field, data, definition)
 
-        if field.remove:
-            data.pop(field_name, None)
-            continue
+    for field in sorted(schema["fields"].values(), key=_weighten_fields):
+        name = _process_field(field, data, definition)
+        if name:
+            known_fields.add(name)
 
-        value = data.get(field_name)
-
-        if field.default_from and not value:
-            data[field.name] = value = _default_from(data, field)
-
-        if field.replace_from:
-            data[field.name] = value = _replace_from(data, field)
-
-        # set static default **after** attempt to get default from the other field
-        if field.default is not SENTINEL and not value:
-            data[field.name] = value = field.default
-
-        if field.value is not SENTINEL:
-            if field.update:
-                if not isinstance(data[field.name], type(field.value)):
-                    raise ValidationError(
-                        {f"{field.name}: the origin value has different type"}
-                    )
-
-                if isinstance(data[field.name], dict):
-                    data[field.name].update(field.value)
-                elif isinstance(data[field.name], list):
-                    data[field.name].extend(field.value)
-                else:
-                    raise ValidationError(
-                        {f"{field.name}: the field value is immutable"}
-                    )
-            else:
-                data[field.name] = value = field.value
-
-        if field.is_multiple():
-            for nested_field in value or []:
-                _transmute_data(nested_field, definition, field.type)
-
-        else:
-            if field_name not in data and not field.validate_missing:
-                continue
-
-            data[field.name] = _apply_validators(
-                Field(field.name, value, root, data_ctx.get()), field.validators
-            )
-
-        if field.map:
-            known_fields.add(field.map)
-            data[field.map] = data.pop(field.name, None)
+    for field in sorted(schema["post-fields"].values(), key=_weighten_fields):
+        _process_field(field, data, definition)
 
     if schema.get("drop_unknown_fields"):
         for name in list(data):
@@ -140,17 +98,73 @@ def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
                 del data[name]
 
 
-def _default_from(data, field: SchemaField):
+def _process_field(
+    field: SchemaField, data: dict[str, Any], definition: SchemaParser
+) -> str | None:
+    if field.remove:
+        data.pop(field.name, None)
+        return
+
+    value: Any = data.get(field.name)
+
+    if field.default_from and not value:
+        data[field.name] = value = _default_from(data, field)
+
+    if field.replace_from:
+        data[field.name] = value = _replace_from(data, field)
+
+    # set static default **after** attempt to get default from the other field
+    if field.default is not SENTINEL and not value:
+        data[field.name] = value = field.default
+
+    if field.value is not SENTINEL:
+        if field.update:
+            if not isinstance(data[field.name], type(field.value)):
+                raise ValidationError(
+                    {field.name: ["Original value has different type"]}
+                )
+
+            if isinstance(data[field.name], dict):
+                data[field.name].update(field.value)
+            elif isinstance(data[field.name], list):
+                data[field.name].extend(field.value)
+            else:
+                raise ValidationError({field.name: ["Field value is not mutable"]})
+        else:
+            data[field.name] = value = field.value
+
+    if field.is_multiple():
+        for nested_field in value or []:  # type: ignore
+            _transmute_data(nested_field, definition, field.type)
+
+    else:
+        if field.name not in data and not field.validate_missing:
+            return
+
+        data[field.name] = _apply_validators(
+            Field(field.name, value, field.type, data_ctx.get()), field.validators
+        )
+
+    if field.map:
+        data[field.map] = data.pop(field.name, None)
+        return field.map
+
+    return field.name
+
+
+def _default_from(data: dict[str, Any], field: SchemaField):
     default_from: Union[list[str], str] = field.get_default_from()
     return _get_external_fields(data, default_from, field)
 
 
-def _replace_from(data, field: SchemaField):
+def _replace_from(data: dict[str, Any], field: SchemaField):
     replace_from: Union[list[str], str] = field.get_replace_from()
     return _get_external_fields(data, replace_from, field)
 
 
-def _get_external_fields(data, external_fields, field: SchemaField):
+def _get_external_fields(
+    data: dict[str, Any], external_fields: Any, field: SchemaField
+):
     if isinstance(external_fields, list):
         if field.inherit_mode == MODE_COMBINE:
             return _combine_from_fields(data, external_fields)
@@ -159,8 +173,8 @@ def _get_external_fields(data, external_fields, field: SchemaField):
     return data[external_fields]
 
 
-def _combine_from_fields(data, external_fields: list[str]):
-    value = []
+def _combine_from_fields(data: dict[str, Any], external_fields: list[str]):
+    value: list[Any] = []
 
     for field_name in external_fields:
         field_value = data[field_name]
@@ -174,7 +188,7 @@ def _combine_from_fields(data, external_fields: list[str]):
     return value
 
 
-def _get_first_filled(data, external_fields: list[str]):
+def _get_first_filled(data: dict[str, Any], external_fields: list[str]):
     """Return first not-empty field value"""
     for field_name in external_fields:
         field_value = data[field_name]
