@@ -725,23 +725,3 @@ class TestTransmuteAction:
         )
 
         assert result["field_3"] == data["field_2"]
-
-
-@pytest.mark.usefixtures("with_plugins", "clean_db")
-class TestValidateAction:
-    def test_validate(self):
-        dataset = factories.Dataset()
-
-        data_dict = {
-            "id": dataset["id"],
-            "name": "Test name",
-            "private": "1",
-            "author_email": "not an email",
-        }
-
-        data, errors = call_action(
-            "tsm_validate",
-            data=data_dict,
-        )
-
-        assert len(errors) == 4

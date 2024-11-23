@@ -73,9 +73,14 @@ theme:
         - content.code.select
         - content.code.annotate
 
-# nav:
-#     - index.md
-#     - installation.md
+nav:
+    - index.md
+    - installation.md
+    - usage.md
+    - api.md
+    - interfaces.md
+    - configuration.md
+    - changelog.md
 #     - Usage:
 #         - usage/configure.md
 #         - usage/use-in-code.md
@@ -89,31 +94,3 @@ theme:
 #         - usage/capabilities.md
 #         - usage/multipart.md
 #         - usage/js.md
-
-#     - upload-strategies.md
-#     - implementation-example.md
-#     - Shared:
-#             - shared/index.md
-#             - shared/types.md
-#             - shared/config.md
-#             - shared/exceptions.md
-#     - cli.md
-#     - API: api.md
-#     - validators.md
-#     - interfaces.md
-#     - Configuration:
-#         - configuration/index.md
-#         - configuration/global.md
-#         - Storage configuration:
-#             - configuration/storage/index.md
-#             - configuration/redis.md
-#             - configuration/fs.md
-#             - configuration/opendal.md
-#             - configuration/libcloud.md
-#     - Migration(experimental):
-#         - migration/index.md
-#         - migration/group.md
-#         - migration/user.md
-#         - migration/resource.md
-
-#     - changelog.md

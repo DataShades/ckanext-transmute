@@ -2,46 +2,59 @@ from __future__ import annotations
 
 import logging
 import contextvars
-from typing import Any, Callable, Optional, Union
+from typing import Any, Union
 
+from ckan import types
 import ckan.plugins.toolkit as tk
-import ckan.lib.plugins as lib_plugins
+
 import ckan.lib.navl.dictization_functions as df
 from ckan.logic import validate, ValidationError
 
-from ckanext.transmute.types import TransmuteData, Field, MODE_COMBINE
+from ckanext.transmute.types import Field, MODE_COMBINE
 from ckanext.transmute.schema import SchemaParser, SchemaField
-from ckanext.transmute.schema import transmute_schema, validate_schema
+from ckanext.transmute.schema import transmute_schema
 from ckanext.transmute.exception import TransmutatorError
-from ckanext.transmute.utils import get_transmutator, SENTINEL
+from ckanext.transmute.utils import get_transmutator, SENTINEL, get_schema
 
 
 log = logging.getLogger(__name__)
 data_ctx = contextvars.ContextVar("data")
 
 
+def get_actions():
+    return {
+        "tsm_transmute": tsm_transmute,
+    }
+
+
 @tk.side_effect_free
 @validate(transmute_schema)
-def transmute(ctx: dict[str, Any], data_dict: TransmuteData) -> dict[str, Any]:
-    """Transmutes data with the provided convertion scheme
-    The function doesn't changes the original data, but creates
-    a new data dict.
+def tsm_transmute(context: types.Context, data_dict: dict[str, Any]) -> dict[str, Any]:
+    """Transmute data using the schema.
+
+    The function creates a deep copy of the data and performs all modifications
+    on the copy.
 
     Args:
-        ctx: CKAN context dict
-        data: A data dict to transmute
-        schema: schema to transmute data
-        root: a root schema type
+        data (dict[str, Any]): A data dict to transmute
+        schema (dict[str, Any]): schema to transmute data
+        root (str): a root schema type
 
     Returns:
-        Transmuted data dict
+        Transmuted data
+
     """
-    tk.check_access("tsm_transmute", ctx, data_dict)
+    tk.check_access("tsm_transmute", context, data_dict)
 
     data = data_dict["data"]
     data_ctx.set(data)
-    schema = SchemaParser(data_dict["schema"])
-    _transmute_data(data, schema, data_dict["root"])
+
+    schema: dict[str, Any] | str = data_dict["schema"]
+    if isinstance(schema, str):
+        schema = get_schema(schema) or {}
+
+    definition = SchemaParser(schema)
+    _transmute_data(data, definition, data_dict["root"])
 
     return data
 
@@ -229,54 +242,3 @@ def _apply_validators(field: Field, validators: list[str | list[str]]):
         raise TransmutatorError(str(e))
 
     return field.value
-
-
-@tk.side_effect_free
-@validate(validate_schema)
-def validate(ctx, data_dict: dict[str, Any]) -> Optional[dict[str, str]]:
-    tk.check_access("tsm_transmute", ctx, data_dict)
-
-    data = data_dict["data"]
-
-    _set_package_type(data)
-    schema = _get_package_schema(ctx)
-    package_plugin = lib_plugins.lookup_package_plugin(data["type"])
-
-    data, errors = lib_plugins.plugin_validate(
-        package_plugin, ctx, data, schema, "package_create"
-    )
-
-    return data, errors
-
-
-def _set_package_type(data_dict: dict[str, Any]):
-    """Set a package type
-
-    Args:
-        data_dict (dict): package metadata
-
-    Returns:
-        str: package type
-    """
-    if "type" in data_dict and data_dict["type"]:
-        return
-
-    package_plugin = lib_plugins.lookup_package_plugin()
-
-    try:
-        package_type = package_plugin.package_types()[0]
-    except (AttributeError, IndexError):
-        package_type = "dataset"
-
-    data_dict["type"] = package_type
-
-
-def _get_package_schema(ctx):
-    package_plugin = lib_plugins.lookup_package_plugin()
-
-    if "schema" in ctx:
-        schema = ctx["schema"]
-    else:
-        schema = package_plugin.create_package_schema()
-
-    return schema

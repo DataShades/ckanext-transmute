@@ -20,7 +20,9 @@ Add `transmute` to the list of enabled plugins in the CKAN config file.
 
 Transform data using inline schema
 ```sh
-ckanapi action tsm_transmute root=example data:'{"greeting": "hello"}' schema:'{
+ckanapi action tsm_transmute root=example \
+    data:'{"greeting": "hello"}' \
+    schema:'{
   "root": "example",
   "types": {
     "example": {

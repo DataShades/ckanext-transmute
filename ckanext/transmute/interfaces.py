@@ -5,28 +5,53 @@ from ckan.plugins.interfaces import Interface
 
 
 class ITransmute(Interface):
+    """Main extension point of ckanext-transmute.
     """
-    Add extra transmutators to be used in tsm_transmute action
-    """
 
-    def get_transmutators(self):
-        """Return the transmutator functions provided by this plugin.
+    def get_transmutators(self) -> dict[str, Any]:
+        """Register custom transmutation functions.
 
-        Return a dictionary mapping transmutator names (strings) to
-        transmutator functions. For example::
+        Example:
+            ```python
+            def get_transmutators(self):
+                return {
+                    "tsm_title_case": tsm_title_case,
+                    "tsm_is_email": tsm_is_email
+                }
+            ```
 
-            {'tsm_title_case': tsm_title_case,
-             'tsm_is_email': tsm_is_email}
-
-        These transmutator functions would then be available for
-        tsm_schema.
+        Returns:
+            Mapping with transmutaion functions.
         """
+        return {}
+
 
     def get_transmutation_schemas(self) -> dict[str, dict[str, Any]]:
-        """Return definitions of named schemas.
+        """Register definitions of named schemas.
 
         These schemas can be reffered by name in code. In this way you can
         define static schema and apply in multiple places it to arbitrary data.
+
+        Example:
+            ```python
+            def get_transmutation_schemas(self):
+                person = {
+                    "fields": {
+                        "age": {"validators": ["int_validator"]},
+                        "name": {"default": "John Doe"},
+                    }
+                }
+
+                schema = {
+                    "root": "person",
+                    "types": {"person": person}
+                }
+
+                return {"person": schema}
+            ```
+
+        Returns:
+            Mapping with definitions of named schemas.
         """
 
         return {}

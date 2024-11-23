@@ -12,6 +12,7 @@ from ckanext.transmute.types import Field
 _transmutators: dict[str, Callable[..., Any]] = {}
 SENTINEL = object()
 
+
 def get_transmutators():
     return _transmutators
 
@@ -184,7 +185,7 @@ def trim_string(field: Field, max_length) -> Field:
 
 
 @transmutator
-def concat(field: Field, *strings: str) -> Field:
+def concat(field: Field, *strings: Any) -> Field:
     """Concat strings to build a new one
     Use $self to point on field value
 
@@ -203,6 +204,7 @@ def concat(field: Field, *strings: str) -> Field:
     for s in strings:
         if s == "$self":
             value_chunks.append(field.value)
+
         elif isinstance(s, str) and s.startswith("$"):
             ref_field_name: str = s.lstrip("$").strip()
 
@@ -288,6 +290,7 @@ def list_mapper(
     field.value = result
 
     return field
+
 
 @transmutator
 def map_value(
