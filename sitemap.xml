@@ -2,42 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/api/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/changelog/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/configuration/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/installation/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/interfaces/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/usage/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/usage/schema/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/usage/transmutators/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
     <url>
          <loc>https://datashades.github.io/ckanext-transmute/usage/type/</loc>
-         <lastmod>2024-11-23</lastmod>
+         <lastmod>2024-11-26</lastmod>
     </url>
 </urlset>
