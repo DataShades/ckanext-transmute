@@ -953,16 +953,16 @@ transmutator with the <code>ITransmute</code> interface.</p>
     <div class="doc doc-contents ">
 
         <p>Concatenate strings to build a new one.</p>
-<p>Example:</p>
-<pre><code>Greet the value in form `Hello VALUE!`.
 
-```json
-{"validators": [
-    ["tsm_concat", "Hello ", "$self", "!"]
-]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Greet the value in form <code>Hello VALUE!</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;tsm_concat&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Hello &quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;$self&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;!&quot;</span><span class="p">]</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -1055,18 +1055,18 @@ transmutator with the <code>ITransmute</code> interface.</p>
     <div class="doc doc-contents ">
 
         <p>Fetches a nested value from a field.</p>
-<p>Example:</p>
-<pre><code>Assuming `field.value` contains `{"a": {"b": [1, 2, 3]}}`, extract
-element with key `a`, from it take element with key `b`, than get the
-element with index `1`. In the end, value is replaced by `2`.
 
-```json
-{"validators": [
-    ["tsm_get_nested", "a", "b", "1"]
-]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Assuming <code>field.value</code> contains <code>{"a": {"b": [1, 2, 3]}}</code>, extract
+element with key <code>a</code>, from it take element with key <code>b</code>, than get the
+element with index <code>1</code>. In the end, value is replaced by <code>2</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;tsm_get_nested&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">]</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -1288,16 +1288,16 @@ Mutates an iso-like string to datetime object.</p>
     <div class="doc doc-contents ">
 
         <p>Maps values within a list to corresponding values from the provided dictionary.</p>
-<p>Example:</p>
-<pre><code>Replace `["Finn", "Jake"]` with `["human", "dog"]`.
 
-```json
-{"validators": [
-    ["tsm_list_mapper", {"Finn": "human", "Jake": "dog"}]
-]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Replace <code>["Finn", "Jake"]</code> with <code>["human", "dog"]</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;tsm_list_mapper&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Finn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;human&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Jake&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dog&quot;</span><span class="p">}]</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -1379,16 +1379,16 @@ they don't have a corresponding mapping. Defaults to False.</p>
     <div class="doc doc-contents ">
 
         <p>Replace special value with other value.</p>
-<p>Example:</p>
-<pre><code>Replace `me` with `COOL USER`, and any other value with `user`.
 
-```json
-{"validators": [
-    ["tsm_map_value", "me", "COOL USER", "user"]
-]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Replace <code>me</code> with <code>COOL USER</code>, and any other value with <code>user</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;tsm_map_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;me&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;COOL USER&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">]</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -1488,16 +1488,16 @@ Leave empty to keep original value of the field.</p>
         <p>Replace a value with a different value.</p>
 <p>The initial value must serve as a key within a mapping dictionary, while
 the dict value will represent the updated value.</p>
-<p>Example:</p>
-<pre><code>Replace `Finn` with `human`, and `Jake` with `dog`.
 
-```json
-{"validators": [
-    ["tsm_mapper", {"Finn": "human", "Jake": "dog"}]
-]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Replace <code>Finn</code> with <code>human</code>, and <code>Jake</code> with <code>dog</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;tsm_mapper&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Finn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;human&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Jake&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dog&quot;</span><span class="p">}]</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -1711,25 +1711,25 @@ If the default value is not provided, the current value will be used as it.</p>
     <div class="doc doc-contents ">
 
         <p>Stop transmutation if field is empty.</p>
-<p>Example:</p>
-<pre><code>Accept the current value and do not call the rest of transmutators if
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Accept the current value and do not call the rest of transmutators if
 value is represented by falsy object(0, null, empty string, empty list,
-etc.)
+etc.)</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;tsm_stop_on_empty&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;i_am_called_with_nonempty_values_only&quot;</span>
+<span class="p">]}</span>
 
-```json
-{"validators": [
-    "tsm_stop_on_empty",
-    "i_am_called_with_nonempty_values_only"
-]}
-
-{"validators": [
-    "tsm_to_string",
-    "tsm_stop_on_empty",
-    "only_nonempty_strings_come_here"
-]}
-```
-</code></pre>
-
+<span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;tsm_to_string&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;tsm_stop_on_empty&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;only_nonempty_strings_come_here&quot;</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -1986,15 +1986,15 @@ etc.)
     <div class="doc doc-contents ">
 
         <p>Casts <code>field.value</code> to str.</p>
-<p>Example:</p>
-<pre><code>Transform `[1, 2, 3]` into string `"[1, 2, 3]"`. Note, that `null` as
-missing value will turn into string `"None"`.
 
-```json
-{"validators": ["tsm_to_string"]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Transform <code>[1, 2, 3]</code> into string <code>"[1, 2, 3]"</code>. Note, that <code>null</code> as
+missing value will turn into string <code>"None"</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_to_string&quot;</span><span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -2147,17 +2147,17 @@ missing value will turn into string `"None"`.
     <div class="doc doc-contents ">
 
         <p>Trim string lenght.</p>
-<p>Example:</p>
-<pre><code>Keep only first 5 characters in the `hello world`, turning it into
-`hello`.
 
-```json
-{"validators": [
-    ["tsm_trim_string", 5]
-]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Keep only first 5 characters in the <code>hello world</code>, turning it into
+<code>hello</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;tsm_trim_string&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">]</span>
+<span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
@@ -2246,14 +2246,14 @@ missing value will turn into string `"None"`.
     <div class="doc doc-contents ">
 
         <p>Preserve only unique values from list.</p>
-<p>Example:</p>
-<pre><code>Remove duplicates from `[1, 1, 2, 1, 2, 2, 1, 3]`, keeping `[1, 2, 3]`.
 
-```json
-{"validators": ["tsm_unique_only"]}
-```
-</code></pre>
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Remove duplicates from <code>[1, 1, 2, 1, 2, 2, 1, 3]</code>, keeping <code>[1, 2, 3]</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_unique_only&quot;</span><span class="p">]}</span>
+</code></pre></div>
+</details>
 
 <table>
       <thead>
