@@ -866,6 +866,51 @@ argument always receives the instance of validated field. It's a dataclass with<
 <li><code>type</code>: the name of the type that contains field definition</li>
 <li><code>data</code>: the whole data dictionary that is currently transmuted</li>
 </ul>
+<p>To apply transmutator, add its name to the <code>validators</code> attribute of the field
+definition in transmutation schema:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="err">...</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;my_field&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;my_transmutator&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When you need to pass additional arguments to transmutator, use the list of
+name and additional parameters instead of string with name:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="err">...</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;my_field&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="s2">&quot;simple_transmutator&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="p">[</span><span class="s2">&quot;complex_transmutator&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;hello_world&quot;</span><span class="p">]</span>
+<span class="w">            </span><span class="p">]</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In the last example, first transmutator will be called as
+<code>simple_transmutator(field)</code>, while second one as <code>complex_transmutator(field,
+42, "hello_world")</code></p>
+<p>To pass into transmutator <em>the value</em> of the current field, pass <code>"$self"</code> as
+an argument. In the similar manner, <code>"$field_name"</code> sends value of the
+<code>field_name</code> into transmutator:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="err">...</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;my_field&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="p">[</span><span class="s2">&quot;complex_transmutator&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;$self&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;$other_field&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span>
+<span class="w">            </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;other_field&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In this case, transmutator will be called as <code>complex_transmutator(field,
+&lt;VALUE OF CURRENT FIELD&gt;, &lt;VALUE OF other_field&gt;, 0)</code>.</p>
 <p>Transmutator modifies field in place and returns the whole field when job is done.</p>
 <p>ckanext-transmute contains a number of transmutators that can be used without
 additional configuration. And if you need more, you can define a custom
@@ -908,7 +953,15 @@ transmutator with the <code>ITransmute</code> interface.</p>
     <div class="doc doc-contents ">
 
         <p>Concatenate strings to build a new one.</p>
-<p>Use <code>$self</code> to point on the current <code>field.value</code>.</p>
+<p>Example:</p>
+<pre><code>Greet the value in form `Hello VALUE!`.
+
+```json
+{"validators": [
+    ["tsm_concat", "Hello ", "$self", "!"]
+]}
+```
+</code></pre>
 
 
 <table>
@@ -1002,6 +1055,17 @@ transmutator with the <code>ITransmute</code> interface.</p>
     <div class="doc doc-contents ">
 
         <p>Fetches a nested value from a field.</p>
+<p>Example:</p>
+<pre><code>Assuming `field.value` contains `{"a": {"b": [1, 2, 3]}}`, extract
+element with key `a`, from it take element with key `b`, than get the
+element with index `1`. In the end, value is replaced by `2`.
+
+```json
+{"validators": [
+    ["tsm_get_nested", "a", "b", "1"]
+]}
+```
+</code></pre>
 
 
 <table>
@@ -1122,6 +1186,13 @@ transmutator with the <code>ITransmute</code> interface.</p>
 Mutates an iso-like string to datetime object.</p>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Transform <code>"2022-01-01"</code> into <code>datetime(year=2022, month=1, day=1)</code>.
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_isodate&quot;</span><span class="p">]}</span>
+</code></pre></div></p>
+</details>
+
 <table>
       <thead>
         <tr>
@@ -1217,6 +1288,15 @@ Mutates an iso-like string to datetime object.</p>
     <div class="doc doc-contents ">
 
         <p>Maps values within a list to corresponding values from the provided dictionary.</p>
+<p>Example:</p>
+<pre><code>Replace `["Finn", "Jake"]` with `["human", "dog"]`.
+
+```json
+{"validators": [
+    ["tsm_list_mapper", {"Finn": "human", "Jake": "dog"}]
+]}
+```
+</code></pre>
 
 
 <table>
@@ -1298,7 +1378,16 @@ they don't have a corresponding mapping. Defaults to False.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Replace value with other value.</p>
+        <p>Replace special value with other value.</p>
+<p>Example:</p>
+<pre><code>Replace `me` with `COOL USER`, and any other value with `user`.
+
+```json
+{"validators": [
+    ["tsm_map_value", "me", "COOL USER", "user"]
+]}
+```
+</code></pre>
 
 
 <table>
@@ -1396,8 +1485,18 @@ Leave empty to keep original value of the field.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Map a value with a new value. The initial value must serve as a key within
-a mapping dictionary, while the dict value will represent the updated value.</p>
+        <p>Replace a value with a different value.</p>
+<p>The initial value must serve as a key within a mapping dictionary, while
+the dict value will represent the updated value.</p>
+<p>Example:</p>
+<pre><code>Replace `Finn` with `human`, and `Jake` with `dog`.
+
+```json
+{"validators": [
+    ["tsm_mapper", {"Finn": "human", "Jake": "dog"}]
+]}
+```
+</code></pre>
 
 
 <table>
@@ -1510,6 +1609,13 @@ If the default value is not provided, the current value will be used as it.</p>
         <p>Wrapper over CKAN default <code>name_validator</code> validator.</p>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Raise an error for <code>NOT A VALID NAME</code>, but accept <code>not-a-valid-name</code>.
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_name_validator&quot;</span><span class="p">]}</span>
+</code></pre></div></p>
+</details>
+
 <table>
       <thead>
         <tr>
@@ -1605,6 +1711,24 @@ If the default value is not provided, the current value will be used as it.</p>
     <div class="doc doc-contents ">
 
         <p>Stop transmutation if field is empty.</p>
+<p>Example:</p>
+<pre><code>Accept the current value and do not call the rest of transmutators if
+value is represented by falsy object(0, null, empty string, empty list,
+etc.)
+
+```json
+{"validators": [
+    "tsm_stop_on_empty",
+    "i_am_called_with_nonempty_values_only"
+]}
+
+{"validators": [
+    "tsm_to_string",
+    "tsm_stop_on_empty",
+    "only_nonempty_strings_come_here"
+]}
+```
+</code></pre>
 
 
 <table>
@@ -1679,6 +1803,13 @@ If the default value is not provided, the current value will be used as it.</p>
 
         <p>Validates if <code>field.value</code> is string.</p>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Raise an error for <code>1</code> but accept <code>"1"</code>.
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_string_only&quot;</span><span class="p">]}</span>
+</code></pre></div></p>
+</details>
 
 <table>
       <thead>
@@ -1777,6 +1908,13 @@ If the default value is not provided, the current value will be used as it.</p>
         <p>Casts string value to lowercase.</p>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Transform <code>HeLlO</code> to <code>hello</code>.
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_to_lowercase&quot;</span><span class="p">]}</span>
+</code></pre></div></p>
+</details>
+
 <table>
       <thead>
         <tr>
@@ -1848,6 +1986,14 @@ If the default value is not provided, the current value will be used as it.</p>
     <div class="doc doc-contents ">
 
         <p>Casts <code>field.value</code> to str.</p>
+<p>Example:</p>
+<pre><code>Transform `[1, 2, 3]` into string `"[1, 2, 3]"`. Note, that `null` as
+missing value will turn into string `"None"`.
+
+```json
+{"validators": ["tsm_to_string"]}
+```
+</code></pre>
 
 
 <table>
@@ -1923,6 +2069,13 @@ If the default value is not provided, the current value will be used as it.</p>
         <p>Casts string value to uppercase.</p>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Transform <code>HeLlO</code> to <code>HELLO</code>.
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;validators&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tsm_to_uppercase&quot;</span><span class="p">]}</span>
+</code></pre></div></p>
+</details>
+
 <table>
       <thead>
         <tr>
@@ -1994,6 +2147,16 @@ If the default value is not provided, the current value will be used as it.</p>
     <div class="doc doc-contents ">
 
         <p>Trim string lenght.</p>
+<p>Example:</p>
+<pre><code>Keep only first 5 characters in the `hello world`, turning it into
+`hello`.
+
+```json
+{"validators": [
+    ["tsm_trim_string", 5]
+]}
+```
+</code></pre>
 
 
 <table>
@@ -2083,6 +2246,13 @@ If the default value is not provided, the current value will be used as it.</p>
     <div class="doc doc-contents ">
 
         <p>Preserve only unique values from list.</p>
+<p>Example:</p>
+<pre><code>Remove duplicates from `[1, 1, 2, 1, 2, 2, 1, 3]`, keeping `[1, 2, 3]`.
+
+```json
+{"validators": ["tsm_unique_only"]}
+```
+</code></pre>
 
 
 <table>
