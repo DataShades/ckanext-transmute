@@ -35,6 +35,12 @@ def get_transmutators():
 def tsm_name_validator(field: Field) -> Field:
     """Wrapper over CKAN default `name_validator` validator.
 
+    Example:
+        Raise an error for `NOT A VALID NAME`, but accept `not-a-valid-name`.
+        ```json
+        {"validators": ["tsm_name_validator"]}
+        ```
+
     Args:
         field (Field): Field object
 
@@ -43,6 +49,7 @@ def tsm_name_validator(field: Field) -> Field:
 
     Returns:
         Field: the same Field object if it's valid
+
     """
     name_validator = tk.get_validator("name_validator")
     field.value = name_validator(field.value, {})
@@ -52,6 +59,12 @@ def tsm_name_validator(field: Field) -> Field:
 
 def tsm_to_lowercase(field: Field) -> Field:
     """Casts string value to lowercase.
+
+    Example:
+        Transform `HeLlO` to `hello`.
+        ```json
+        {"validators": ["tsm_to_lowercase"]}
+        ```
 
     Args:
         field (Field): Field object
@@ -66,6 +79,12 @@ def tsm_to_lowercase(field: Field) -> Field:
 def tsm_to_uppercase(field: Field) -> Field:
     """Casts string value to uppercase.
 
+    Example:
+        Transform `HeLlO` to `HELLO`.
+        ```json
+        {"validators": ["tsm_to_uppercase"]}
+        ```
+
     Args:
         field (Field): Field object
 
@@ -77,13 +96,19 @@ def tsm_to_uppercase(field: Field) -> Field:
 
 
 def tsm_string_only(field: Field) -> Field:
-    """Validates if field.value is string.
+    """Validates if `field.value` is string.
+
+    Example:
+        Raise an error for `1` but accept `"1"`.
+        ```json
+        {"validators": ["tsm_string_only"]}
+        ```
 
     Args:
         field (Field): Field object
 
     Raises:
-        df.Invalid: raises is the field.value is not string
+        df.Invalid: raises is the `field.value` is not string
 
     Returns:
         Field: the same Field object if it's valid
@@ -96,6 +121,12 @@ def tsm_string_only(field: Field) -> Field:
 def tsm_isodate(field: Field) -> Field:
     """Validates datetime string
     Mutates an iso-like string to datetime object.
+
+    Example:
+        Transform `"2022-01-01"` into `datetime(year=2022, month=1, day=1)`.
+        ```json
+        {"validators": ["tsm_isodate"]}
+        ```
 
     Args:
         field (Field): Field object
@@ -118,13 +149,22 @@ def tsm_isodate(field: Field) -> Field:
 
 
 def tsm_to_string(field: Field) -> Field:
-    """Casts field.value to str.
+    """Casts `field.value` to str.
+
+    Example:
+        Transform `[1, 2, 3]` into string `"[1, 2, 3]"`. Note, that `null` as
+        missing value will turn into string `"None"`.
+
+        ```json
+        {"validators": ["tsm_to_string"]}
+        ```
 
     Args:
         field (Field): Field object
 
     Returns:
         Field: the same Field with new value
+
     """
     field.value = str(field.value)
 
@@ -134,11 +174,30 @@ def tsm_to_string(field: Field) -> Field:
 def tsm_stop_on_empty(field: Field) -> Field:
     """Stop transmutation if field is empty.
 
+    Example:
+        Accept the current value and do not call the rest of transmutators if
+        value is represented by falsy object(0, null, empty string, empty list,
+        etc.)
+
+        ```json
+        {"validators": [
+            "tsm_stop_on_empty",
+            "i_am_called_with_nonempty_values_only"
+        ]}
+
+        {"validators": [
+            "tsm_to_string",
+            "tsm_stop_on_empty",
+            "only_nonempty_strings_come_here"
+        ]}
+        ```
+
     Args:
         field (Field): Field object
 
     Returns:
         Field: the same Field
+
     """
     if not field.value:
         raise df.StopOnError
@@ -149,6 +208,17 @@ def tsm_stop_on_empty(field: Field) -> Field:
 def tsm_get_nested(field: Field, *path: str) -> Field:
     """Fetches a nested value from a field.
 
+    Example:
+        Assuming `field.value` contains `{"a": {"b": [1, 2, 3]}}`, extract
+        element with key `a`, from it take element with key `b`, than get the
+        element with index `1`. In the end, value is replaced by `2`.
+
+        ```json
+        {"validators": [
+            ["tsm_get_nested", "a", "b", "1"]
+        ]}
+        ```
+
     Args:
         field (Field): Field object
         path: Iterable with path segments
@@ -158,6 +228,7 @@ def tsm_get_nested(field: Field, *path: str) -> Field:
 
     Returns:
         Field: the same Field with new value
+
     """
     for key in path:
         try:
@@ -170,12 +241,23 @@ def tsm_get_nested(field: Field, *path: str) -> Field:
 def tsm_trim_string(field: Field, max_length: int) -> Field:
     """Trim string lenght.
 
+    Example:
+        Keep only first 5 characters in the `hello world`, turning it into
+        `hello`.
+
+        ```json
+        {"validators": [
+            ["tsm_trim_string", 5]
+        ]}
+        ```
+
     Args:
         field (Field): Field object
         max_length (int): String max length
 
     Returns:
         Field: the same Field object if it's valid
+
     """
     if not isinstance(max_length, int):
         raise df.Invalid(tk._("max_length must be integer"))
@@ -187,7 +269,14 @@ def tsm_trim_string(field: Field, max_length: int) -> Field:
 def tsm_concat(field: Field, *strings: Any) -> Field:
     """Concatenate strings to build a new one.
 
-    Use `$self` to point on the current field value.
+    Example:
+        Greet the value in form `Hello VALUE!`.
+
+        ```json
+        {"validators": [
+            ["tsm_concat", "Hello ", "$self", "!"]
+        ]}
+        ```
 
     Args:
         field: Field object
@@ -223,11 +312,19 @@ def tsm_concat(field: Field, *strings: Any) -> Field:
 def tsm_unique_only(field: Field) -> Field:
     """Preserve only unique values from list.
 
+    Example:
+        Remove duplicates from `[1, 1, 2, 1, 2, 2, 1, 3]`, keeping `[1, 2, 3]`.
+
+        ```json
+        {"validators": ["tsm_unique_only"]}
+        ```
+
     Args:
         field (Field): Field object
 
     Returns:
         Field: the same Field with new value
+
     """
     if not isinstance(field.value, list):
         raise df.Invalid(tk._("Field value must be an array"))
@@ -238,8 +335,19 @@ def tsm_unique_only(field: Field) -> Field:
 def tsm_mapper(
     field: Field, mapping: dict[Any, Any], default: Any | None = None
 ) -> Field:
-    """Map a value with a new value. The initial value must serve as a key within
-    a mapping dictionary, while the dict value will represent the updated value.
+    """Replace a value with a different value.
+
+    The initial value must serve as a key within a mapping dictionary, while
+    the dict value will represent the updated value.
+
+    Example:
+        Replace `Finn` with `human`, and `Jake` with `dog`.
+
+        ```json
+        {"validators": [
+            ["tsm_mapper", {"Finn": "human", "Jake": "dog"}]
+        ]}
+        ```
 
     Args:
         field (Field): Field object
@@ -249,6 +357,7 @@ def tsm_mapper(
 
     Returns:
         Field: the same Field with new value
+
     """
     new_value = mapping.get(field.value, default or field.value)
 
@@ -263,6 +372,15 @@ def tsm_list_mapper(
     remove: bool | None = False,
 ) -> Field:
     """Maps values within a list to corresponding values from the provided dictionary.
+
+    Example:
+        Replace `["Finn", "Jake"]` with `["human", "dog"]`.
+
+        ```json
+        {"validators": [
+            ["tsm_list_mapper", {"Finn": "human", "Jake": "dog"}]
+        ]}
+        ```
 
     Args:
         field (Field): Field object
@@ -294,13 +412,22 @@ def tsm_map_value(
     if_same: Any,
     if_different: Any = SENTINEL,
 ) -> Field:
-    """Replace value with other value.
+    """Replace special value with other value.
+
+    Example:
+        Replace `me` with `COOL USER`, and any other value with `user`.
+
+        ```json
+        {"validators": [
+            ["tsm_map_value", "me", "COOL USER", "user"]
+        ]}
+        ```
 
     Args:
         field: Field object
-        test_value: value that will be compared to field value
-        if_same: value to use if test_value matches the field value
-        if_different: value to use if test_value does not matche the field value.
+        test_value: value that will be compared to `field.value`
+        if_same: value to use if test_value matches the `field.value`
+        if_different: value to use if test_value does not matche the `field.value`.
             Leave empty to keep original value of the field.
     """
     if field.value == test_value:
