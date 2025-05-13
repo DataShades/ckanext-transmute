@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ckanext-transmute"
-version = "1.7.0"
+version = "1.8.0"
 description = "Converts a dataset based on a specific schema"
 authors = [
     {name = "DataShades", email = "datashades@linkdigital.com.au"},
