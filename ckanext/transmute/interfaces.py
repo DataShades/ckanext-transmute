@@ -25,7 +25,6 @@ class ITransmute(Interface):
         """
         return {}
 
-
     def get_transmutation_schemas(self) -> dict[str, dict[str, Any]]:
         """Register definitions of named schemas.
 

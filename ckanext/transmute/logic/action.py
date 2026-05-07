@@ -12,16 +12,23 @@ from ckan.logic import ValidationError, validate
 from ckanext.transmute.exception import TransmutatorError
 from ckanext.transmute.schema import SchemaField, SchemaParser, transmute_schema
 from ckanext.transmute.types import MODE_COMBINE, Field
-from ckanext.transmute.utils import SENTINEL, get_schema, get_transmutator
+from ckanext.transmute.utils import (
+    SENTINEL,
+    get_json_schema,
+    get_schema,
+    get_transmutator,
+)
 
 log = logging.getLogger(__name__)
 data_ctx = contextvars.ContextVar("data")
 
 
-def get_actions():
-    return {
-        "tsm_transmute": tsm_transmute,
-    }
+@tk.side_effect_free
+def tsm_get_json_schema(ctx: dict[str, Any], data_dict: dict) -> dict[str, Any]:
+    schema = {"$schema": "http://json-schema.org/draft-04/schema"}
+    schema.update(get_json_schema()["properties"]["tsm_schema"])
+
+    return schema
 
 
 @tk.side_effect_free
@@ -69,14 +76,14 @@ def _transmute_data(data, definition, root):
     if not schema:
         return
 
-    mutate_fields(data, definition, root)
+    _mutate_fields(data, definition, root)
 
 
 def _weighten_fields(field: SchemaField):
     return field.weight
 
 
-def mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
+def _mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
     """Checks all of the schema fields and mutate/create them according to the
     provided schema.
 
@@ -116,11 +123,15 @@ def _process_field(
 
     value: Any = data.get(field.name)
 
-    if field.default_from and not value:
-        data[field.name] = value = _default_from(data, field)
+    if (
+        field.default_from
+        and not value
+        and (default_from_value := _default_from(data, field))
+    ):
+        data[field.name] = value = default_from_value
 
-    if field.replace_from:
-        data[field.name] = value = _replace_from(data, field)
+    if field.replace_from and (replace_from_value := _replace_from(data, field)):
+        data[field.name] = value = replace_from_value
 
     # set static default **after** attempt to get default from the other field
     if field.default is not SENTINEL and not value:
@@ -141,7 +152,6 @@ def _process_field(
                 raise ValidationError({field.name: ["Field value is not mutable"]})
         else:
             data[field.name] = value = field.value
-
 
     if field.is_multiple():
         for nested_field in value or []:  # type: ignore
@@ -180,14 +190,18 @@ def _get_external_fields(
             return _combine_from_fields(data, external_fields)
         else:
             return _get_first_filled(data, external_fields)
-    return data[external_fields]
+
+    return data.get(external_fields)
 
 
 def _combine_from_fields(data: dict[str, Any], external_fields: list[str]):
     value: list[Any] = []
 
     for field_name in external_fields:
-        field_value = data[field_name]
+        field_value = data.get(field_name)
+
+        if not field_value:
+            continue
 
         if isinstance(field_value, list):
             for item in data[field_name]:
@@ -201,7 +215,7 @@ def _combine_from_fields(data: dict[str, Any], external_fields: list[str]):
 def _get_first_filled(data: dict[str, Any], external_fields: list[str]):
     """Return first not-empty field value."""
     for field_name in external_fields:
-        field_value = data[field_name]
+        field_value = data.get(field_name)
 
         if field_value:
             return field_value

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import ckan.plugins as p
 
@@ -145,7 +146,7 @@ def get_json_schema() -> dict[str, Any]:
                                 "fields": {
                                     "type": "object",
                                     "minProperties": 1,
-                                    "propertyNames": {"pattern": "^[A-Za-z_-]*$"},
+                                    "propertyNames": {"pattern": "^[A-Za-z0-9_-]*$"},
                                     "additionalProperties": fields_definition,
                                 }
                             },

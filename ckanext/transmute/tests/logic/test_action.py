@@ -470,12 +470,11 @@ class TestTransmuteAction:
         added to the result data.
         """
         data: dict[str, Any] = {
-            "metadata_created": "",
+            "metadata_created": "hello world",
         }
 
         tsm_schema = build_schema(
             {
-                "metadata_created": {},
                 "metadata_modified": {
                     "default_from": "metadata_created",
                 },
@@ -489,7 +488,6 @@ class TestTransmuteAction:
             root="Dataset",
         )
 
-        assert "metadata_modified" in result
         assert result["metadata_modified"] == result["metadata_created"]
 
     def test_transmute_new_field_from_default_and_value(self):
