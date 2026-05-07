@@ -661,3 +661,148 @@ class TestGetNestedTransmutator:
         )
 
         assert result["a"] == 1
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestToIntegerTransmutator:
+    def test_converts_string_to_integer(self):
+        data: dict[str, Any] = {"count": "42"}
+
+        tsm_schema = build_schema({"count": {"validators": ["tsm_to_integer"]}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["count"] == 42
+        assert isinstance(result["count"], int)
+
+    def test_converts_float_to_integer(self):
+        data: dict[str, Any] = {"count": 3.7}
+
+        tsm_schema = build_schema({"count": {"validators": ["tsm_to_integer"]}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["count"] == 3
+
+    def test_converts_zero_string(self):
+        data: dict[str, Any] = {"count": "0"}
+
+        tsm_schema = build_schema({"count": {"validators": ["tsm_to_integer"]}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["count"] == 0
+
+    def test_raises_on_non_numeric_string(self):
+        data: dict[str, Any] = {"count": "abc"}
+
+        tsm_schema = build_schema({"count": {"validators": ["tsm_to_integer"]}})
+
+        with pytest.raises(ValidationError, match="Cannot convert value to integer"):
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+    def test_raises_on_none(self):
+        data: dict[str, Any] = {"count": None}
+
+        tsm_schema = build_schema({"count": {"validators": ["tsm_to_integer"]}})
+
+        with pytest.raises(ValidationError, match="Cannot convert value to integer"):
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestToFloatTransmutator:
+    def test_converts_string_to_float(self):
+        data: dict[str, Any] = {"ratio": "3.14"}
+
+        tsm_schema = build_schema({"ratio": {"validators": ["tsm_to_float"]}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["ratio"] == pytest.approx(3.14)
+        assert isinstance(result["ratio"], float)
+
+    def test_converts_integer_to_float(self):
+        data: dict[str, Any] = {"ratio": 5}
+
+        tsm_schema = build_schema({"ratio": {"validators": ["tsm_to_float"]}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["ratio"] == 5.0
+        assert isinstance(result["ratio"], float)
+
+    def test_converts_zero_string(self):
+        data: dict[str, Any] = {"ratio": "0.0"}
+
+        tsm_schema = build_schema({"ratio": {"validators": ["tsm_to_float"]}})
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["ratio"] == 0.0
+
+    def test_raises_on_non_numeric_string(self):
+        data: dict[str, Any] = {"ratio": "not-a-number"}
+
+        tsm_schema = build_schema({"ratio": {"validators": ["tsm_to_float"]}})
+
+        with pytest.raises(ValidationError, match="Cannot convert value to float"):
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )
+
+    def test_raises_on_none(self):
+        data: dict[str, Any] = {"ratio": None}
+
+        tsm_schema = build_schema({"ratio": {"validators": ["tsm_to_float"]}})
+
+        with pytest.raises(ValidationError, match="Cannot convert value to float"):
+            call_action(
+                "tsm_transmute",
+                data=data,
+                schema=tsm_schema,
+                root="Dataset",
+            )

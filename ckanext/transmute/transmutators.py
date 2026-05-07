@@ -29,6 +29,8 @@ def get_transmutators():
         "tsm_mapper": tsm_mapper,
         "tsm_list_mapper": tsm_list_mapper,
         "tsm_map_value": tsm_map_value,
+        "tsm_to_integer": tsm_to_integer,
+        "tsm_to_float": tsm_to_float,
     }
 
 
@@ -442,4 +444,58 @@ def tsm_map_value(
     elif if_different is not SENTINEL:
         field.value = if_different
 
+    return field
+
+
+def tsm_to_integer(field: Field) -> Field:
+    """Casts `field.value` to int.
+
+    Example:
+        Transform `"42"` into integer `42`.
+
+        ```json
+        {"validators": ["tsm_to_integer"]}
+        ```
+
+    Args:
+        field (Field): Field object
+
+    Raises:
+        df.Invalid: if the value cannot be converted to integer
+
+    Returns:
+        Field: the same Field with new value
+
+    """
+    try:
+        field.value = int(field.value)
+    except (ValueError, TypeError):
+        raise df.Invalid(tk._("Cannot convert value to integer"))
+    return field
+
+
+def tsm_to_float(field: Field) -> Field:
+    """Casts `field.value` to float.
+
+    Example:
+        Transform `"3.14"` into float `3.14`.
+
+        ```json
+        {"validators": ["tsm_to_float"]}
+        ```
+
+    Args:
+        field (Field): Field object
+
+    Raises:
+        df.Invalid: if the value cannot be converted to float
+
+    Returns:
+        Field: the same Field with new value
+
+    """
+    try:
+        field.value = float(field.value)
+    except (ValueError, TypeError):
+        raise df.Invalid(tk._("Cannot convert value to float"))
     return field
