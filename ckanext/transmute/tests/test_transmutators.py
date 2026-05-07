@@ -315,7 +315,7 @@ class TestConcatTransmutator:
 class TestUniqueOnlyTransmutator:
     def test_unique_only(self):
         """You can skip using $self if you want for some reason."""
-        data: dict[str, Any] = {"field_name": [1, 2, 3, 3, 4, 5, 6, 6]}
+        data: dict[str, Any] = {"field_name": [9, 2, 3, 3, 4, 5, 6, 6]}
 
         tsm_schema = build_schema(
             {
@@ -332,7 +332,7 @@ class TestUniqueOnlyTransmutator:
             root="Dataset",
         )
 
-        assert result["field_name"] == [1, 2, 3, 4, 5, 6]
+        assert result["field_name"] == [9, 2, 3, 4, 5, 6]
 
     def test_unique_only_for_not_list(self):
         """You can skip using $self if you want for some reason."""

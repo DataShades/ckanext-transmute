@@ -328,7 +328,7 @@ def tsm_unique_only(field: Field) -> Field:
     """
     if not isinstance(field.value, list):
         raise df.Invalid(tk._("Field value must be an array"))
-    field.value = list(set(field.value))
+    field.value = list(dict.fromkeys(field.value))
     return field
 
 
