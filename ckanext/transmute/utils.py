@@ -22,10 +22,12 @@ def get_schema(name: str) -> dict[str, Any] | None:
     return _schema_cache.get(name)
 
 
-def collect_schemas():
+def collect_schemas() -> dict[str, Any]:
     """Collect named schemas from ITransmute plugins."""
     for plugin in reversed(list(p.PluginImplementations(ITransmute))):
         _schema_cache.update(plugin.get_transmutation_schemas())
+
+    return _schema_cache
 
 
 def get_transmutator(transmutator: str) -> Callable[..., Any]:
@@ -156,9 +158,5 @@ def get_json_schema() -> dict[str, Any]:
                 "required": ["root", "types"],
             }
         },
-        "$defs": {
-            "anytype": {
-                "type": ["number", "string", "boolean", "object", "array", "null"]
-            }
-        },
+        "$defs": {"anytype": {"type": ["number", "string", "boolean", "object", "array", "null"]}},
     }

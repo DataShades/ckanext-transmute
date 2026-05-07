@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import pytest
 
 import ckan.lib.helpers as h
+import ckan.plugins.toolkit as tk
 from ckan.logic import ValidationError
 from ckan.tests.helpers import call_action
 
+from ckanext.transmute import utils as transmute_utils
 from ckanext.transmute.exception import SchemaParsingError
 from ckanext.transmute.tests.helpers import build_schema
 from ckanext.transmute.types import MODE_FIRST_FILLED
@@ -53,9 +56,7 @@ class TestTransmuteAction:
             root="Dataset",
         )
 
-        assert result["metadata_created"] == h.date_str_to_datetime(
-            metadata_created_default
-        )
+        assert result["metadata_created"] == h.date_str_to_datetime(metadata_created_default)
 
     def test_transmute_default_with_origin_value(self):
         """The default value mustn't replace the origin value."""
@@ -226,9 +227,7 @@ class TestTransmuteAction:
             root="Dataset",
         )
 
-        assert result["field_4"] == data["field_1"] + [data["field_2"]] + [
-            data["field_3"]
-        ]
+        assert result["field_4"] == data["field_1"] + [data["field_2"]] + [data["field_3"]]
 
     def test_transmute_default_from_multiple(self):
         """Default from multiple fields must combine values of those fields."""
@@ -280,9 +279,7 @@ class TestTransmuteAction:
             root="Dataset",
         )
 
-        assert result["field_4"] == data["field_1"] + [data["field_2"]] + [
-            data["field_3"]
-        ]
+        assert result["field_4"] == data["field_1"] + [data["field_2"]] + [data["field_3"]]
 
     def test_transmute_replace_from_nested(self):
         data = {
@@ -717,3 +714,271 @@ class TestTransmuteAction:
         )
 
         assert result["field_3"] == data["field_2"]
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestPrePostFields:
+    def test_pre_fields_are_processed(self):
+        """Fields in the pre-fields section run through validators like regular fields."""
+        data: dict[str, Any] = {"title": "hello"}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "pre-fields": {"title": {"validators": ["tsm_to_uppercase"]}},
+                    "fields": {},
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        assert result["title"] == "HELLO"
+
+    def test_post_fields_are_processed(self):
+        """Fields in the post-fields section run through validators like regular fields."""
+        data: dict[str, Any] = {"title": "hello"}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "fields": {},
+                    "post-fields": {"title": {"validators": ["tsm_to_uppercase"]}},
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        assert result["title"] == "HELLO"
+
+    def test_pre_fields_run_before_fields(self):
+        """A pre-field transformation is visible to regular fields processed afterward."""
+        data: dict[str, Any] = {"source": "hello", "dest": ""}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "pre-fields": {"source": {"validators": ["tsm_to_uppercase"]}},
+                    "fields": {
+                        "source": {},
+                        "dest": {"replace_from": "source"},
+                    },
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        # pre-fields uppercased "source" before fields copied it into "dest"
+        assert result["source"] == "HELLO"
+        assert result["dest"] == "HELLO"
+
+    def test_post_fields_run_after_fields(self):
+        """A post-field sees the value that regular fields already transformed."""
+        data: dict[str, Any] = {"name": "hello", "summary": ""}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "fields": {
+                        "name": {"validators": ["tsm_to_uppercase"]},
+                        "summary": {},
+                    },
+                    "post-fields": {"summary": {"replace_from": "name"}},
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        # post-fields copies "name" after fields already uppercased it
+        assert result["name"] == "HELLO"
+        assert result["summary"] == "HELLO"
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestValidateMissing:
+    def test_absent_field_skipped_by_default(self):
+        """A schema field not present in data is silently ignored without validate_missing."""
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema=build_schema({"absent": {}}),
+            root="Dataset",
+        )
+
+        assert "absent" not in result
+
+    def test_validate_missing_adds_field_as_none(self):
+        """validate_missing=True processes the absent field, producing None when no validators."""
+        result = call_action(
+            "tsm_transmute",
+            data={},
+            schema=build_schema({"missing": {"validate_missing": True}}),
+            root="Dataset",
+        )
+
+        assert "missing" in result
+        assert result["missing"] is None
+
+    def test_validate_missing_runs_validators_on_absent_field(self):
+        """validate_missing=True causes validators to execute even when the field is missing."""
+        with pytest.raises(ValidationError):
+            call_action(
+                "tsm_transmute",
+                data={},
+                schema=build_schema(
+                    {
+                        "absent": {
+                            "validate_missing": True,
+                            "validators": ["tsm_string_only"],
+                        }
+                    }
+                ),
+                root="Dataset",
+            )
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestWeightOrdering:
+    def test_lower_weight_field_processed_first(self):
+        """A field with weight=0 is processed before a field with weight=1."""
+        data: dict[str, Any] = {"source": "hello", "dest": ""}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "fields": {
+                        # source (weight 0) is uppercased first
+                        "source": {"validators": ["tsm_to_uppercase"], "weight": 0},
+                        # dest (weight 1) copies source after it was uppercased
+                        "dest": {"replace_from": "source", "weight": 1},
+                    }
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        assert result["source"] == "HELLO"
+        assert result["dest"] == "HELLO"
+
+    def test_higher_weight_field_processed_later(self):
+        """A field with weight=1 is processed after weight=0, so weight=0 misses the transform."""
+        data: dict[str, Any] = {"source": "hello", "dest": ""}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "fields": {
+                        # dest (weight 0) copies source before source is uppercased
+                        "dest": {"replace_from": "source", "weight": 0},
+                        # source (weight 1) is uppercased afterward
+                        "source": {"validators": ["tsm_to_uppercase"], "weight": 1},
+                    }
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        assert result["source"] == "HELLO"
+        # dest ran before source was transformed — it saw the original "hello"
+        assert result["dest"] == "hello"
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestDropUnknownFields:
+    def test_extra_fields_dropped_when_flag_set(self):
+        """Fields present in data but absent from the schema are removed."""
+        data: dict[str, Any] = {"known": "keep", "extra": "drop"}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "drop_unknown_fields": True,
+                    "fields": {"known": {}},
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        assert result == {"known": "keep"}
+        assert "extra" not in result
+
+    def test_extra_fields_kept_without_flag(self):
+        """Without drop_unknown_fields, extra data fields pass through unchanged."""
+        data: dict[str, Any] = {"known": "keep", "extra": "also kept"}
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=build_schema({"known": {}}),
+            root="Dataset",
+        )
+
+        assert result["extra"] == "also kept"
+
+    def test_mapped_field_name_is_kept(self):
+        """After a field is mapped to a new name, the new name is what's kept."""
+        data: dict[str, Any] = {"original": "value", "extra": "drop"}
+
+        schema = {
+            "root": "Dataset",
+            "types": {
+                "Dataset": {
+                    "drop_unknown_fields": True,
+                    "fields": {"original": {"map": "renamed"}},
+                }
+            },
+        }
+
+        result = call_action("tsm_transmute", data=data, schema=schema, root="Dataset")
+
+        assert "renamed" in result
+        assert "original" not in result
+        assert "extra" not in result
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestNamedSchema:
+    def test_string_schema_name_resolves_from_cache(self, monkeypatch):
+        """Passing a string as the schema argument resolves the named schema from cache."""
+
+        monkeypatch.setitem(
+            transmute_utils._schema_cache,
+            "_test_named_schema",
+            build_schema({"title": {"validators": ["tsm_to_uppercase"]}}),
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data={"title": "hello"},
+            schema="_test_named_schema",
+            root="Dataset",
+        )
+
+        assert result["title"] == "HELLO"
+
+    def test_plugin_reads_schema_from_json_file(self, monkeypatch, tmp_path):
+        """TransmutePlugin.get_transmutation_schemas reads JSON files pointed to by config."""
+
+        schema_body = build_schema({"name": {"validators": ["tsm_to_lowercase"]}})
+        schema_file = tmp_path / "schema.json"
+        schema_file.write_text(json.dumps(schema_body))
+
+        monkeypatch.setattr(tk, "config", {"ckanext.transmute.schema.loaded_schema": str(schema_file)})
+
+        schemas = transmute_utils.collect_schemas()
+
+        assert "loaded_schema" in schemas
+        assert schemas["loaded_schema"] == schema_body

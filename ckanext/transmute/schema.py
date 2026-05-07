@@ -44,10 +44,7 @@ class SchemaField:
             raise SchemaFieldError("Field: `default_from` field name is not defined")
 
         if isinstance(self.default_from, list):
-            return [
-                self._get_sibling_field_name(field_name)
-                for field_name in self.default_from
-            ]
+            return [self._get_sibling_field_name(field_name) for field_name in self.default_from]
 
         return self._get_sibling_field_name(self.default_from)
 
@@ -56,10 +53,7 @@ class SchemaField:
             raise SchemaFieldError("Field: `replace_from` field name is not defined")
 
         if isinstance(self.replace_from, list):
-            return [
-                self._get_sibling_field_name(field_name)
-                for field_name in self.replace_from
-            ]
+            return [self._get_sibling_field_name(field_name) for field_name in self.replace_from]
 
         return self._get_sibling_field_name(self.replace_from)
 
@@ -96,13 +90,9 @@ class SchemaParser:
     def parse_fields(self, field_type: str):
         for _type, type_meta in self.types.items():
             for field_name, field_meta in type_meta.setdefault(field_type, {}).items():
-                type_meta[field_type][field_name] = self._parse_field(
-                    field_name, field_meta, _type
-                )
+                type_meta[field_type][field_name] = self._parse_field(field_name, field_meta, _type)
 
-    def _parse_field(
-        self, field_name: str, field_meta: dict[str, Any], _type: str
-    ) -> SchemaField:
+    def _parse_field(self, field_name: str, field_meta: dict[str, Any], _type: str) -> SchemaField:
         """Create a SchemaField combining all the
         information about field.
 

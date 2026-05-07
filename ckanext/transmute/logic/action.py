@@ -115,20 +115,14 @@ def _mutate_fields(data: dict[str, Any], definition: SchemaParser, root: str):
                 del data[name]
 
 
-def _process_field(
-    field: SchemaField, data: dict[str, Any], definition: SchemaParser
-) -> str | None:
+def _process_field(field: SchemaField, data: dict[str, Any], definition: SchemaParser) -> str | None:
     if field.remove:
         data.pop(field.name, None)
         return
 
     value: Any = data.get(field.name)
 
-    if (
-        field.default_from
-        and not value
-        and (default_from_value := _default_from(data, field))
-    ):
+    if field.default_from and not value and (default_from_value := _default_from(data, field)):
         data[field.name] = value = default_from_value
 
     if field.replace_from and (replace_from_value := _replace_from(data, field)):
@@ -141,9 +135,7 @@ def _process_field(
     if field.value is not SENTINEL:
         if field.update:
             if not isinstance(data[field.name], type(field.value)):
-                raise ValidationError(
-                    {field.name: ["Original value has different type"]}
-                )
+                raise ValidationError({field.name: ["Original value has different type"]})
 
             if isinstance(data[field.name], dict):
                 data[field.name].update(field.value)
@@ -162,9 +154,7 @@ def _process_field(
         if field.name not in data and not field.validate_missing:
             return
 
-        data[field.name] = _apply_validators(
-            Field(field.name, value, field.type, data_ctx.get()), field.validators
-        )
+        data[field.name] = _apply_validators(Field(field.name, value, field.type, data_ctx.get()), field.validators)
 
     if field.map:
         data[field.map] = data.pop(field.name, None)
@@ -183,9 +173,7 @@ def _replace_from(data: dict[str, Any], field: SchemaField):
     return _get_external_fields(data, replace_from, field)
 
 
-def _get_external_fields(
-    data: dict[str, Any], external_fields: Any, field: SchemaField
-):
+def _get_external_fields(data: dict[str, Any], external_fields: Any, field: SchemaField):
     if isinstance(external_fields, list):
         if field.inherit_mode == MODE_COMBINE:
             return _combine_from_fields(data, external_fields)

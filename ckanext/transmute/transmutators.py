@@ -334,9 +334,7 @@ def tsm_unique_only(field: Field) -> Field:
     return field
 
 
-def tsm_mapper(
-    field: Field, mapping: dict[Any, Any], default: Any = SENTINEL
-) -> Field:
+def tsm_mapper(field: Field, mapping: dict[Any, Any], default: Any = SENTINEL) -> Field:
     """Replace a value with a different value.
 
     The initial value must serve as a key within a mapping dictionary, while

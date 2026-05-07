@@ -58,9 +58,7 @@ class TestTrimStringTransmutator:
             "field_name": "hello world",
         }
 
-        tsm_schema = build_schema(
-            {"field_name": {"validators": [["tsm_trim_string", 5]]}}
-        )
+        tsm_schema = build_schema({"field_name": {"validators": [["tsm_trim_string", 5]]}})
 
         result = call_action(
             "tsm_transmute",
@@ -76,9 +74,7 @@ class TestTrimStringTransmutator:
             "field_name": "hello world",
         }
 
-        tsm_schema = build_schema(
-            {"field_name": {"validators": [["tsm_trim_string", 0]]}}
-        )
+        tsm_schema = build_schema({"field_name": {"validators": [["tsm_trim_string", 0]]}})
 
         result = call_action(
             "tsm_transmute",
@@ -94,9 +90,7 @@ class TestTrimStringTransmutator:
             "field_name": "hello world",
         }
 
-        tsm_schema = build_schema(
-            {"field_name": {"validators": [["tsm_trim_string", 0, 1]]}}
-        )
+        tsm_schema = build_schema({"field_name": {"validators": [["tsm_trim_string", 0, 1]]}})
 
         with pytest.raises(TransmutatorError):
             call_action(
@@ -111,9 +105,7 @@ class TestTrimStringTransmutator:
             "field_name": "hello world",
         }
 
-        tsm_schema = build_schema(
-            {"field_name": {"validators": [["tsm_trim_string", "0"]]}}
-        )
+        tsm_schema = build_schema({"field_name": {"validators": [["tsm_trim_string", "0"]]}})
 
         with pytest.raises(ValidationError, match="max_length must be integer"):
             call_action(
@@ -468,7 +460,8 @@ class TestMapperTransmutator:
 
     @pytest.mark.parametrize("default", [0, "", False, None, [], {}])
     def test_mapper_falsy_default_used_when_key_not_found(self, default):
-        """A falsy default must be used as-is, not silently replaced by the original value."""
+        """A falsy default must be used as-is, not silently replaced
+        by the original value."""
         data: dict[str, Any] = {"language": "ua"}
 
         tsm_schema = build_schema(
@@ -491,7 +484,8 @@ class TestMapperTransmutator:
         assert result["language"] == default
 
     def test_mapper_mapping_to_falsy_value(self):
-        """A key that maps to a falsy value (e.g. None) must yield that value, not the original."""
+        """A key that maps to a falsy value (e.g. None) must yield
+        that value, not the original."""
         data: dict[str, Any] = {"encoding": "n/a"}
 
         tsm_schema = build_schema(
