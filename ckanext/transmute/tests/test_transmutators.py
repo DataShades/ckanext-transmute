@@ -587,3 +587,52 @@ class TestListMapperTransmutator:
             )
 
         assert e.value.error == "Arguments for validator weren't provided"
+
+    @pytest.mark.parametrize("falsy_value", [0, "", False, None])
+    def test_list_mapper_maps_to_falsy_value(self, falsy_value):
+        """A mapped falsy value must be used as-is, not replaced by the original."""
+        data: dict[str, Any] = {"codes": ["yes", "no", "unknown"]}
+
+        tsm_schema = build_schema(
+            {
+                "codes": {
+                    "validators": [
+                        ["tsm_list_mapper", {"yes": True, "no": falsy_value}],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["codes"] == [True, falsy_value, "unknown"]
+
+    @pytest.mark.parametrize("falsy_value", [0, "", False, None])
+    def test_list_mapper_falsy_value_not_dropped_when_remove_true(self, falsy_value):
+        """A value that maps to a falsy result must not be dropped when remove=True."""
+        data: dict[str, Any] = {"codes": ["yes", "no", "unknown"]}
+
+        tsm_schema = build_schema(
+            {
+                "codes": {
+                    "validators": [
+                        ["tsm_list_mapper", {"yes": True, "no": falsy_value}, True],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        # "unknown" has no mapping → removed; "no" is mapped (even to falsy) → kept
+        assert result["codes"] == [True, falsy_value]

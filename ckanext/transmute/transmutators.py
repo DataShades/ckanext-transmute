@@ -398,12 +398,14 @@ def tsm_list_mapper(
     result = []
 
     for value in field.value:
-        map_value = mapping.get(value)
+        map_value = mapping.get(value, SENTINEL)
 
-        if not map_value and remove:
-            continue
-
-        result.append(map_value or value)
+        if map_value is SENTINEL:
+            if remove:
+                continue
+            result.append(value)
+        else:
+            result.append(map_value)
 
     field.value = result
 
