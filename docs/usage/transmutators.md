@@ -8,7 +8,11 @@ argument always receives the instance of validated field. It's a dataclass with
 * `field_name`: the name of processed field
 * `value`: current value of the field
 * `type`: the name of the type that contains field definition
-* `data`: the whole data dictionary that is currently transmuted
+* `data`: the **root-level** data dictionary. This always refers to the
+  outermost dict regardless of nesting depth — within a nested type like
+  `Resource`, `field.data` still points to the top-level `Dataset` dict, not
+  the current resource dict. This means `"$field_name"` arguments (see below)
+  can reach root-level fields from any depth.
 
 To apply transmutator, add its name to the `validators` attribute of the field
 definition in transmutation schema:
