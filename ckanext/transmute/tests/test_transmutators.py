@@ -466,6 +466,53 @@ class TestMapperTransmutator:
 
         assert result["language"] == "ua"
 
+    @pytest.mark.parametrize("default", [0, "", False, None, [], {}])
+    def test_mapper_falsy_default_used_when_key_not_found(self, default):
+        """A falsy default must be used as-is, not silently replaced by the original value."""
+        data: dict[str, Any] = {"language": "ua"}
+
+        tsm_schema = build_schema(
+            {
+                "language": {
+                    "validators": [
+                        ["tsm_mapper", {"eng": "English"}, default],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["language"] == default
+
+    def test_mapper_mapping_to_falsy_value(self):
+        """A key that maps to a falsy value (e.g. None) must yield that value, not the original."""
+        data: dict[str, Any] = {"encoding": "n/a"}
+
+        tsm_schema = build_schema(
+            {
+                "encoding": {
+                    "validators": [
+                        ["tsm_mapper", {"n/a": None}],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["encoding"] is None
+
 
 @pytest.mark.usefixtures("with_plugins")
 class TestListMapperTransmutator:

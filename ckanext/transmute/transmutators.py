@@ -333,7 +333,7 @@ def tsm_unique_only(field: Field) -> Field:
 
 
 def tsm_mapper(
-    field: Field, mapping: dict[Any, Any], default: Any | None = None
+    field: Field, mapping: dict[Any, Any], default: Any = SENTINEL
 ) -> Field:
     """Replace a value with a different value.
 
@@ -353,13 +353,17 @@ def tsm_mapper(
         field (Field): Field object
         mapping (dict[Any, Any]): A dictionary representing the mapping of values.
         default (Any): The default value to be used when the key is not found.
-            If the default value is not provided, the current value will be used as it.
+            If omitted, the original field value is kept unchanged. Falsy values
+            such as 0, "", False, or None are valid defaults.
 
     Returns:
         Field: the same Field with new value
 
     """
-    new_value = mapping.get(field.value, default or field.value)
+    new_value = mapping.get(field.value, SENTINEL)
+
+    if new_value is SENTINEL:
+        new_value = field.value if default is SENTINEL else default
 
     field.value = new_value
 
