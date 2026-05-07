@@ -1,27 +1,90 @@
-# Changelog
+## [2.0.0] - 2026-05-07
 
-All notable changes to this project will be documented in this file.
+BREAKING: requires migration, tsm_transmute doesn't change original data now
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+### 🐛 Bug Fixes
 
-<!-- insertion marker -->
-## [v1.7.0](https://github.com/DataShades/ckanext-transmute/releases/tag/v1.7.0) - 2024-10-30
+- Do a original data deepcopy as was stated before
 
-<small>[Compare with first commit](https://github.com/DataShades/ckanext-transmute/compare/c6a7701a0e5beb9d15a9b44871d8ac6a7e512994...v1.7.0)</small>
+## [1.9.2] - 2026-05-07
 
-### Features
+Release v1.9.2
 
-- add map_value transmutator ([e1c5e4d](https://github.com/DataShades/ckanext-transmute/commit/e1c5e4d820ed247123ee65e051db28543984b6ae) by Sergey Motornyuk).
-- combine default and default_from ([7fabb18](https://github.com/DataShades/ckanext-transmute/commit/7fabb184a073b100bcecfff8ce8f136d83697202) by Sergey Motornyuk).
-- add stop_on_empty transmutator ([ea07550](https://github.com/DataShades/ckanext-transmute/commit/ea07550b04e3479ab0ac091a00eddee32f0f33c7) by Sergey Motornyuk).
-- add schema drop_unknown_fields ([4b14b09](https://github.com/DataShades/ckanext-transmute/commit/4b14b09adee2783a0d9dd6464faaee8ccc8717fc) by Sergey Motornyuk).
-- add weight to fields ([963f36f](https://github.com/DataShades/ckanext-transmute/commit/963f36ffc32a7e3598673e1dc96cd83349afa662) by Sergey Motornyuk).
-- add named schemas ([30cc544](https://github.com/DataShades/ckanext-transmute/commit/30cc544210f6cecb748f41db69dbd6bfe1bcf131) by Sergey Motornyuk).
+### 🐛 Bug Fixes
 
-### Bug Fixes
+- Fix tsm_list_mapper to allow using falsy values as a default
 
-- default overrides value ([bf581e4](https://github.com/DataShades/ckanext-transmute/commit/bf581e4a17d0e07ff7dd39f03beba4d4323678bc) by Sergey Motornyuk).
-- falsy values cannot be used as default ([41e08ab](https://github.com/DataShades/ckanext-transmute/commit/41e08abbfc07d5cbac01bc500c1b37becd102b66) by Sergey Motornyuk).
-- tsm_transmute action ignores custom root ([c21b6d3](https://github.com/DataShades/ckanext-transmute/commit/c21b6d33b6c51bd5a3eece5d546fa67edd3c2fef) by Sergey Motornyuk).
+## [1.9.1] - 2026-05-07
+
+Release v1.9.1
+
+### 🐛 Bug Fixes
+
+- Fix tsm_mapper to allow using falsy values as a default
+
+## [1.9.0] - 2026-05-07
+
+Release v1.9.0
+
+### 🐛 Bug Fixes
+
+- Fix replace_from and default_from if value is missing in a target data, add get_json_schema
+
+## [1.8.0] - 2025-05-13
+
+Release v1.8.0
+
+### 🚀 Features
+
+- Pre-fields and post-fields added to schema
+
+### 🐛 Bug Fixes
+
+- Add namespace_packages to setup.cfg
+
+### ⚙️ Miscellaneous Tasks
+
+- Flatten logic module
+- Apply ruff fixes
+- Add docs
+- Update transmustartor docs
+
+## [1.7.0] - 2024-10-30
+
+### 🚀 Features
+
+- Add tsm_mapper transmutator
+- Add tsm_list_mapper transmutator
+- Add named schemas
+- Add weight to fields
+- Add schema drop_unknown_fields
+- Add stop_on_empty transmutator
+- Combine default and default_from
+- Add map_value transmutator
+
+### 🐛 Bug Fixes
+
+- Tsm_transmute action ignores custom root
+- Falsy values cannot be used as default
+- Default overrides value
+
+### 💼 Other
+
+- Update tsm_mapping transmutator
+
+### 📚 Documentation
+
+- Update doc, refine typos
+- Update tsm_mapping and tsm_list_mapping doc
+- Update tsm_mapping and tsm_list_mapping doc, part 2
+
+### 🧪 Testing
+
+- Fix tests, add test budge
+
+### ⚙️ Miscellaneous Tasks
+
+- Add pyproject / remove duplicates from requirements
+- Fix test
+- Build changelog
 
