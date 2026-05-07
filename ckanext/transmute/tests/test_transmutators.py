@@ -636,3 +636,28 @@ class TestListMapperTransmutator:
 
         # "unknown" has no mapping → removed; "no" is mapped (even to falsy) → kept
         assert result["codes"] == [True, falsy_value]
+
+
+@pytest.mark.usefixtures("with_plugins")
+class TestGetNestedTransmutator:
+    def test_get_nested_transmutator(self):
+        data: dict[str, Any] = {"a": {"b": {"c": 1}}}
+
+        tsm_schema = build_schema(
+            {
+                "a": {
+                    "validators": [
+                        ["tsm_get_nested", "b", "c"],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["a"] == 1

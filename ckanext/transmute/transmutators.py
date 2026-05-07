@@ -215,7 +215,7 @@ def tsm_get_nested(field: Field, *path: str) -> Field:
 
         ```json
         {"validators": [
-            ["tsm_get_nested", "a", "b", "1"]
+            ["tsm_get_nested", "a", "b", 1]
         ]}
         ```
 

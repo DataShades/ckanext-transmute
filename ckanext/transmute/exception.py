@@ -1,19 +1,19 @@
-class BaseException(Exception):
+class TransmuteBaseException(Exception):
     def __init__(self, error_message: str):
         self.error = error_message
 
 
-class SchemaParsingError(BaseException):
+class SchemaParsingError(TransmuteBaseException):
     pass
 
 
-class SchemaFieldError(BaseException):
+class SchemaFieldError(TransmuteBaseException):
     pass
 
 
-class UnknownTransmutator(BaseException):
+class UnknownTransmutator(TransmuteBaseException):
     pass
 
 
-class TransmutatorError(BaseException):
+class TransmutatorError(TransmuteBaseException):
     pass
