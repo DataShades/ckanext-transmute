@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextvars
+import copy
 import logging
 from typing import Any
 
@@ -50,7 +51,7 @@ def tsm_transmute(context: types.Context, data_dict: dict[str, Any]) -> dict[str
     """
     tk.check_access("tsm_transmute", context, data_dict)
 
-    data = data_dict["data"]
+    data = copy.deepcopy(data_dict["data"])
     data_ctx.set(data)
 
     schema: dict[str, Any] | str = data_dict["schema"]

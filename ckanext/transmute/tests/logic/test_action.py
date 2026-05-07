@@ -396,7 +396,7 @@ class TestTransmuteAction:
             ],
         }
 
-        call_action(
+        result = call_action(
             "tsm_transmute",
             data=data,
             schema=tsm_schema,
@@ -404,7 +404,7 @@ class TestTransmuteAction:
         )
 
         metadata_created = h.date_str_to_datetime("2022-02-03T15:54:26.359453")
-        assert data == {
+        assert result == {
             "name": "test-dataset",
             "email": "test@test.ua",
             "metadata_created": metadata_created,
@@ -424,6 +424,7 @@ class TestTransmuteAction:
                 },
             ],
         }
+        assert data["title"] == "Test-dataset"
 
     def test_transmute_no_field_schema(self):
         """If no fields specified, there is nothing to do."""
