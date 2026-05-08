@@ -122,11 +122,15 @@ def _process_field(field: SchemaField, data: dict[str, Any], definition: SchemaP
 
     value: Any = data.get(field.name)
 
-    if field.default_from and not value and (default_from_value := _default_from(data, field)):
-        data[field.name] = value = default_from_value
+    if field.default_from and not value:
+        default_from_value = _default_from(data, field)
+        if default_from_value is not SENTINEL:
+          data[field.name] = value = default_from_value
 
-    if field.replace_from and (replace_from_value := _replace_from(data, field)):
-        data[field.name] = value = replace_from_value
+    if field.replace_from:
+        replace_from_value = _replace_from(data, field)
+        if replace_from_value is not SENTINEL:
+            data[field.name] = value = replace_from_value
 
     # set static default **after** attempt to get default from the other field
     if field.default is not SENTINEL and not value:

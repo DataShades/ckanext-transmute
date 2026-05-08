@@ -507,6 +507,29 @@ class TestMapperTransmutator:
 
         assert result["encoding"] is None
 
+    def test_mapper_empty_original_value_falls_back_to_default(self):
+        """If the original value is empty, the default must be used."""
+        data: dict[str, Any] = {"encoding": ""}
+
+        tsm_schema = build_schema(
+            {
+                "encode": {
+                    "replace_from": "encoding",
+                    "validators": [
+                        ["tsm_mapper", {"1": "2"}, "3"],
+                    ],
+                },
+            }
+        )
+
+        result = call_action(
+            "tsm_transmute",
+            data=data,
+            schema=tsm_schema,
+            root="Dataset",
+        )
+
+        assert result["encode"] is "3"
 
 @pytest.mark.usefixtures("with_plugins")
 class TestListMapperTransmutator:

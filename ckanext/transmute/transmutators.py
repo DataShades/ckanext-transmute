@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from dateutil.parser import ParserError, parse
 
 import ckan.lib.navl.dictization_functions as df
 import ckan.plugins.toolkit as tk
+from ckan import types
 
 from ckanext.transmute.types import Field
 
@@ -53,7 +54,7 @@ def tsm_name_validator(field: Field) -> Field:
         Field: the same Field object if it's valid
 
     """
-    name_validator = tk.get_validator("name_validator")
+    name_validator = cast(types.ContextValidator, tk.get_validator("name_validator"))
     field.value = name_validator(field.value, {})
 
     return field
